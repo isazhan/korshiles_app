@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:korshiles_app/data.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,15 +28,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+  late Future<List<dynamic>> _data;
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text('Home Page',
-        style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
-    Text('Search Page',
-        style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
-    Text('Profile Page',
-        style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _data = ApiService().getHomeData();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -43,15 +42,44 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  static const List<Widget> _widgetOptions = <Widget>[
+    Text('Search Page',
+        style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
+    Text('Profile Page',
+        style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Korshiles'),
+        title: Text('Көршілес'),
       ),
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: _selectedIndex == 0
+          ? FutureBuilder<List<dynamic>>(
+              future: _data,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                          child: ListTile(
+                        title: Text(snapshot.data![index]['ad'].toString()),
+                        subtitle: Text(snapshot.data![index]['info']),
+                      ));
+                    },
+                  );
+                } else {
+                  return Center(child: Text('No data available'));
+                }
+              },
+            )
+          : _widgetOptions.elementAt(_selectedIndex - 1),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
