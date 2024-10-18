@@ -20,31 +20,60 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
-      body: FutureBuilder<List<dynamic>>(
-        future: _data,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                return Card(
-                    child: ListTile(
-                  title: Text(snapshot.data![index]['ad'].toString()),
-                  subtitle: Text(snapshot.data![index]['info']),
-                ));
+        appBar: CustomAppBar(),
+        body: Column(children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            color: Colors.red,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    print('Button 1');
+                  },
+                  child: Text('Button 1'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    print('Button 2');
+                  },
+                  child: Text('Button 2'),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: _data,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  return ListView.builder(
+                    //shrinkWrap: true,
+                    //physics: NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.only(top: 10),
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                          margin: EdgeInsets.only(bottom: 5),
+                          elevation: 5,
+                          child: ListTile(
+                            title: Text(snapshot.data![index]['ad'].toString()),
+                            subtitle: Text(snapshot.data![index]['info']),
+                          ));
+                    },
+                  );
+                } else {
+                  return Center(child: Text('No data available'));
+                }
               },
-            );
-          } else {
-            return Center(child: Text('No data available'));
-          }
-        },
-      ),
-    );
+            ),
+          ),
+        ]));
   }
 }
 
