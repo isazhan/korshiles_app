@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ad_view.dart';
 
 class HomeView extends StatefulWidget {
   @override
@@ -30,15 +31,15 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    print('Button 1');
+                    print('Sort');
                   },
-                  child: Text('Button 1'),
+                  child: Text('Sort'),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    print('Button 2');
+                    print('Filter');
                   },
-                  child: Text('Button 2'),
+                  child: Text('Filter'),
                 ),
               ],
             ),
@@ -61,10 +62,24 @@ class _HomeViewState extends State<HomeView> {
                       return Card(
                           margin: EdgeInsets.only(bottom: 5),
                           elevation: 5,
-                          child: ListTile(
-                            title: Text(snapshot.data![index]['ad'].toString()),
-                            subtitle: Text(snapshot.data![index]['info']),
-                          ));
+                          child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => AdView(
+                                          ad: snapshot.data![index]['ad'])),
+                                );
+                              },
+                              child: ListTile(
+                                title: Text(
+                                    snapshot.data![index]['ad'].toString()),
+                                subtitle: Text(
+                                  snapshot.data![index]['info'],
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )));
                     },
                   );
                 } else {
@@ -78,7 +93,7 @@ class _HomeViewState extends State<HomeView> {
 }
 
 class ApiService {
-  final String apiUrl = "http://127.0.0.1:8000/api/index";
+  final String apiUrl = "http://0.0.0.0:8000/api/index";
 
   Future<List<dynamic>> getHomeData() async {
     try {
