@@ -3,6 +3,7 @@ import '../widgets/bar.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'ad_view.dart';
+import 'filter_view.dart';
 
 class HomeView extends StatefulWidget {
   @override
@@ -37,7 +38,10 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    print('Filter');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => FilterView()),
+                    );
                   },
                   child: Text('Filter'),
                 ),
