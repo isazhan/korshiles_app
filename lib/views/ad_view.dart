@@ -1,39 +1,31 @@
 import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:korshiles_app/requests/api.dart';
 
 class AdView extends StatelessWidget {
-  AdView({super.key, required this.ad});
+  final String ad;
 
-  final int ad;
+  AdView({super.key, required this.ad});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
-      body: Center(child: Text(ad.toString())),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService().getAd(ad),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No data available.'));
+          } else {
+            final data = snapshot.data!;
+            return Center(child: Text(data['info']));
+          }
+        },
+      ),
     );
-  }
-}
-
-class ApiService1 {
-  final String apiUrl = "http://0.0.0.0:8000/api/ad";
-
-  Future<List<dynamic>> getAdData(String ad) async {
-    try {
-      final response = await http.post(Uri.parse(apiUrl),
-          body: jsonEncode(<String, String>{
-            'ad': ad,
-          }));
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to load data');
-      }
-    } catch (e) {
-      throw Exception('Error fetching data: $e');
-    }
   }
 }

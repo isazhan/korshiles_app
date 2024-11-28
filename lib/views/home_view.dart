@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:korshiles_app/requests/api.dart';
 import '../widgets/bar.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'ad_view.dart';
 import 'filter_view.dart';
 
@@ -26,7 +25,7 @@ class _HomeViewState extends State<HomeView> {
         body: Column(children: [
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            color: Colors.red,
+            color: Colors.blueGrey,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -72,7 +71,8 @@ class _HomeViewState extends State<HomeView> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => AdView(
-                                          ad: snapshot.data![index]['ad'])),
+                                          ad: snapshot.data![index]['ad']
+                                              .toString())),
                                 );
                               },
                               child: ListTile(
@@ -93,23 +93,5 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ]));
-  }
-}
-
-class ApiService {
-  final String apiUrl = "http://0.0.0.0:8000/api/index";
-
-  Future<List<dynamic>> getHomeData() async {
-    try {
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to load data');
-      }
-    } catch (e) {
-      throw Exception('Error fetching data: $e');
-    }
   }
 }

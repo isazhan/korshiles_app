@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
-//import 'dart:convert';
-//import 'package:http/http.dart' as http;
+import 'package:korshiles_app/requests/api.dart';
 
 class FilterView extends StatelessWidget {
   FilterView({super.key});
@@ -18,7 +17,10 @@ class FilterView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Center(
               child: ElevatedButton(
-                  onPressed: () {}, child: const Text('Показать результаты')),
+                  onPressed: () {
+                    ApiService().getFilter();
+                  },
+                  child: const Text('Показать результаты')),
             ))
       ])),
     );
