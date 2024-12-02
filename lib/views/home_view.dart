@@ -10,12 +10,23 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late Future<List<dynamic>> _data;
+  late List<dynamic> _data = [];
 
   @override
   void initState() {
     super.initState();
-    _data = ApiService().getHomeData();
+    refreshData({'type': ''});
+  }
+
+  Future<void> refreshData(filter) async {
+    try {
+      final refreshedData = await ApiService().getAds(filter);
+      setState(() {
+        _data = refreshedData;
+      });
+    } catch (e) {
+      print('Error fetching ads: $e');
+    }
   }
 
   @override
@@ -36,11 +47,14 @@ class _HomeViewState extends State<HomeView> {
                   child: Text('Sort'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final filters = await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => FilterView()),
                     );
+                    if (filters != null) {
+                      refreshData(filters);
+                    }
                   },
                   child: Text('Filter'),
                 ),
@@ -48,50 +62,36 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: _data,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  return ListView.builder(
-                    //shrinkWrap: true,
-                    //physics: NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.only(top: 10),
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                          margin: EdgeInsets.only(bottom: 5),
-                          elevation: 5,
-                          child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => AdView(
-                                          ad: snapshot.data![index]['ad']
-                                              .toString())),
-                                );
-                              },
-                              child: ListTile(
-                                title: Text(
-                                    snapshot.data![index]['ad'].toString()),
-                                subtitle: Text(
-                                  snapshot.data![index]['info'],
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              )));
-                    },
-                  );
-                } else {
-                  return Center(child: Text('No data available'));
-                }
-              },
-            ),
-          ),
+              child: _data.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      //shrinkWrap: true,
+                      //physics: NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.only(top: 10),
+                      itemCount: _data.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                            margin: EdgeInsets.only(bottom: 5),
+                            elevation: 5,
+                            child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => AdView(
+                                            ad: _data[index]['ad'].toString())),
+                                  );
+                                },
+                                child: ListTile(
+                                  title: Text(_data[index]['ad'].toString()),
+                                  subtitle: Text(
+                                    _data[index]['info'],
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )));
+                      },
+                    ))
         ]));
   }
 }
