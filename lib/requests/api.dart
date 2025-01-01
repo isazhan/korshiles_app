@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const host = '0.0.0.0:8000';
+  //static const host = '0.0.0.0:8000';
+  static const host = 'korshiles.kz';
 
   Future<List<dynamic>> getAds(filter) async {
     final apiUrl = Uri.http(host, '/api/index', filter);
@@ -20,12 +21,13 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getAd(String ad) async {
-    const String apiUrl = "http://0.0.0.0:8000/api/ad";
+    final apiUrl = Uri.http(host, '/api/ad');
+    //const String apiUrl = "http://0.0.0.0:8000/api/ad";
     final Map<String, dynamic> data = {
       'ad': ad,
     };
     try {
-      final response = await http.post(Uri.parse(apiUrl), body: data);
+      final response = await http.post(apiUrl, body: data);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
