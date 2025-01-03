@@ -10,15 +10,15 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late List<dynamic> _data = [];
+  List<dynamic> _data = [];
 
   @override
   void initState() {
     super.initState();
-    refreshData({'type': ''});
+    _refreshData({'type': ''});
   }
 
-  Future<void> refreshData(filter) async {
+  Future<void> _refreshData(filter) async {
     try {
       final refreshedData = await ApiService().getAds(filter);
       setState(() {
@@ -44,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
                   onPressed: () {
                     print('Sort');
                   },
-                  child: Text('Sort'),
+                  child: Text('Сортировать'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -53,10 +53,10 @@ class _HomeViewState extends State<HomeView> {
                       MaterialPageRoute(builder: (context) => FilterView()),
                     );
                     if (filters != null) {
-                      refreshData(filters);
+                      _refreshData(filters);
                     }
                   },
-                  child: Text('Filter'),
+                  child: Text('Фильтр'),
                 ),
               ],
             ),
@@ -64,34 +64,67 @@ class _HomeViewState extends State<HomeView> {
           Expanded(
               child: _data.isEmpty
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      //shrinkWrap: true,
-                      //physics: NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.only(top: 10),
-                      itemCount: _data.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                            margin: EdgeInsets.only(bottom: 5),
-                            elevation: 5,
-                            child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => AdView(
-                                            ad: _data[index]['ad'].toString())),
-                                  );
-                                },
-                                child: ListTile(
-                                  title: Text(_data[index]['ad'].toString()),
-                                  subtitle: Text(
-                                    _data[index]['info'],
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                )));
-                      },
-                    ))
+                  : RefreshIndicator(
+                      onRefresh: () => _refreshData({'type': ''}),
+                      child: ListView.builder(
+                        //shrinkWrap: true,
+                        //physics: NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.only(top: 10),
+                        itemCount: _data.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                              margin: EdgeInsets.only(bottom: 5),
+                              elevation: 5,
+                              child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => AdView(
+                                              ad: _data[index]['ad']
+                                                  .toString())),
+                                    );
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        _data[index]['type']['ru'].toString(),
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: <Widget>[
+                                          Image.asset(
+                                            'static/img/no-image.png',
+                                            width: 150,
+                                          ),
+                                          Flexible(
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                Text(
+                                                    _data[index]['city']['ru']),
+                                                Text(_data[index]['district']
+                                                    ['ru']),
+                                                const SizedBox(height: 16),
+                                                Text(
+                                                  _data[index]['info'],
+                                                  maxLines: 3,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ]))
+                                        ],
+                                      )
+                                    ],
+                                  )));
+                        },
+                      )))
         ]));
   }
 }

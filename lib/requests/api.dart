@@ -20,14 +20,10 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getAd(String ad) async {
-    final apiUrl = Uri.http(host, '/api/ad');
-    //const String apiUrl = "http://0.0.0.0:8000/api/ad";
-    final Map<String, dynamic> data = {
-      'ad': ad,
-    };
+  Future<Map<String, dynamic>> getAd(ad) async {
+    final apiUrl = Uri.http(host, '/api/ad', {'ad': ad});
     try {
-      final response = await http.post(apiUrl, body: data);
+      final response = await http.get(apiUrl);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
