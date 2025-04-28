@@ -1,0 +1,2 @@
+C:/Users/admin/Desktop/repos/korshiles_app/android/app/.cxx/Debug/6zj1h621/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/admin/Desktop/repos/korshiles_app/android/app/.cxx/Debug/6zj1h621/armeabi-v7a/CMakeFiles/rebuild_cache.dir

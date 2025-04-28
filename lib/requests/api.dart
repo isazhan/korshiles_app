@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  //static const host = '0.0.0.0:8000';
+  //static const host = '127.0.0.1:8000';
   static const host = 'korshiles.kz';
 
   Future<List<dynamic>> getAds(filter) async {
