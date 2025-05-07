@@ -17,10 +17,51 @@ class _HomeViewState extends State<HomeView> {
   String selectedDistrict = '';
   String selectedPage = '';
 
+  final ScrollController _scrollController = ScrollController();
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _refreshData({'page': '1', 'type': '', 'city': '', 'district': ''});
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200 && !isLoading) {
+          _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final moreData = await ApiService().getAds({
+        'page': (int.parse(selectedPage) + 1).toString(),
+        'type': '',
+        'city': selectedCity,
+        'district': selectedDistrict,
+      });
+      setState(() {
+        _data.addAll(moreData);
+        selectedPage = (int.parse(selectedPage) + 1).toString();
+      });
+    } catch (e) {
+      print('Error loading more ads: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshData(filter) async {
@@ -44,53 +85,72 @@ class _HomeViewState extends State<HomeView> {
   void nextPage() {
     _refreshData({'page': (int.parse(selectedPage)+1).toString(), 'type': '', 'city': '', 'district': ''});
   }
-/*
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title:Text('Көршілес'),
-          bottom: const TabBar(tabs: [
-            Tab(text: 'Ищу на подселение'),
-            Tab(text: 'Пойду на подселение'),]
-        ),),
-        body: TabBarView(children: [
-          buildTabContent('ad_go'),
-          buildTabContent('ad_look'),
-        ])
-      ),
-    );
-  }
-}
 
-Widget buildTabContent(String tabType) {
-  return Column(
-    children: [
-      Padding(padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Text(tabType),
-        ],
-      )
-      ,)
-    ],
-  );
-}
-*/
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
       body: Column(children: [
+        
+        // Filter and Sort buttons
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          //color: Colors.white,
+          child: Row(
+            //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Объявления'),
+              Spacer(),
+              SizedBox(
+                height: 30,
+                child: VerticalDivider(
+                  color: Colors.grey,
+                  width: 1,
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.swap_vert,
+                  color: Colors.blue,
+                  )
+              ),
+              SizedBox(
+                height: 30,
+                child: VerticalDivider(
+                  color: Colors.grey,
+                  width: 1,
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.tune,
+                  color: Colors.blue,
+                  )
+              ),              
+            ],
+          ),
+        ),
+        
+        // Ads List
         Expanded(child:
       ListView.builder(
-        itemCount: _data.length,
+        controller: _scrollController,
+        itemCount: _data.length + (isLoading ? 1 : 0),
         itemBuilder: (context, index) {
+
+
+          if (index == _data.length) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
           return Card(
-                              margin: EdgeInsets.only(bottom: 5),
+                              margin: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
                               elevation: 5,
                               child: InkWell(
                                   onTap: () {
@@ -107,7 +167,7 @@ Widget buildTabContent(String tabType) {
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
-                                        _data[index]['type']['ru'].toString(),
+                                        _data[index]['type']['ru'].toString() + ' ' + _data[index]['ad'].toString(),
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
@@ -133,6 +193,11 @@ Widget buildTabContent(String tabType) {
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                 ),
+                                                const SizedBox(height: 16),
+                                                Text(
+                                                  _data[index]['create_time'] ?? '',
+                                                  textAlign: TextAlign.right,
+                                                ),
                                               ]))
                                         ],
                                       )
@@ -142,28 +207,10 @@ Widget buildTabContent(String tabType) {
       ),
         ),
 
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton(
-                onPressed: previousPage,
-                child: const Text('Назад'),
-              ),
-              Text(selectedPage),
-              ElevatedButton(
-                onPressed: nextPage,
-                child: const Text('Вперёд'),
-              ),
-            ],
-          ),
-        )
-
       ]),
     );
   }
-
+}
 /*
   @override
   Widget build(BuildContext context) {
@@ -264,4 +311,3 @@ Widget buildTabContent(String tabType) {
         ]));
   }
 */
-}
