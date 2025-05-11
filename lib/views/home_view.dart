@@ -3,6 +3,7 @@ import 'package:korshiles_app/requests/api.dart';
 import '../widgets/bar.dart';
 import 'ad_view.dart';
 import 'filter_view.dart';
+import 'package:intl/intl.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -13,9 +14,11 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   List<dynamic> _data = [];
+  String selectedType = '';
   String selectedCity = '';
   String selectedDistrict = '';
   String selectedPage = '';
+  int totalAds = 0;
 
   final ScrollController _scrollController = ScrollController();
   bool isLoading = false;
@@ -41,12 +44,12 @@ class _HomeViewState extends State<HomeView> {
     try {
       final moreData = await ApiService().getAds({
         'page': (int.parse(selectedPage) + 1).toString(),
-        'type': '',
+        'type': selectedType,
         'city': selectedCity,
         'district': selectedDistrict,
       });
       setState(() {
-        _data.addAll(moreData);
+        _data.addAll(moreData['ads'] ?? []);
         selectedPage = (int.parse(selectedPage) + 1).toString();
       });
     } catch (e) {
@@ -68,10 +71,12 @@ class _HomeViewState extends State<HomeView> {
     try {
       final refreshedData = await ApiService().getAds(filter);
       setState(() {
-        _data = refreshedData;
+        _data = refreshedData['ads'] ?? [];
+        selectedType = filter['type'] ?? '';
         selectedCity = filter['city'] ?? '';
         selectedDistrict = filter['district'] ?? '';
         selectedPage = filter['page'] ?? '1';
+        totalAds = refreshedData['total'] ?? 0;
       });
     } catch (e) {
       print('Error fetching ads: $e');
@@ -101,7 +106,12 @@ class _HomeViewState extends State<HomeView> {
             //mainAxisAlignment: MainAxisAlignment.spaceBetween,
             //crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Объявления'),
+              Text(totalAds.toString() + ' объявления',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               Spacer(),
               SizedBox(
                 height: 30,
@@ -125,7 +135,15 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final filters = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FilterView()),
+                  );
+                  if (filters != null) {
+                    _refreshData(filters);
+                  }
+                },
                 icon: Icon(
                   Icons.tune,
                   color: Colors.blue,
@@ -151,7 +169,8 @@ class _HomeViewState extends State<HomeView> {
 
           return Card(
                               margin: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-                              elevation: 5,
+                              elevation: 0,
+                              color: Color.fromRGBO(22, 151, 209, 0.05),
                               child: InkWell(
                                   onTap: () {
                                     Navigator.push(
@@ -169,7 +188,7 @@ class _HomeViewState extends State<HomeView> {
                                       Text(
                                         _data[index]['type']['ru'].toString() + ' ' + _data[index]['ad'].toString(),
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -194,9 +213,15 @@ class _HomeViewState extends State<HomeView> {
                                                       TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(height: 16),
-                                                Text(
-                                                  _data[index]['create_time'] ?? '',
-                                                  textAlign: TextAlign.right,
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.visibility, color: Colors.grey, size: 16),
+                                                    Text(_data[index]['views'].toString()),
+                                                    Spacer(),
+                                                    Text(
+                                                      DateFormat('d.MM.yyyy').format(DateTime.parse(_data[index]['create_time'].toString())).toString(),
+                                                    ),
+                                                  ],
                                                 ),
                                               ]))
                                         ],
@@ -211,103 +236,3 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 }
-/*
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: CustomAppBar(),
-        body: Column(children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            color: Colors.blueGrey,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    print('Sort');
-                  },
-                  child: Text('Сортировать'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final filters = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => FilterView()),
-                    );
-                    if (filters != null) {
-                      _refreshData(filters);
-                    }
-                  },
-                  child: Text('Фильтр'),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-              child: _data.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : RefreshIndicator(
-                      onRefresh: () => _refreshData({'type': ''}),
-                      child: ListView.builder(
-                        //shrinkWrap: true,
-                        //physics: NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.only(top: 10),
-                        itemCount: _data.length,
-                        itemBuilder: (context, index) {
-                          return Card(
-                              margin: EdgeInsets.only(bottom: 5),
-                              elevation: 5,
-                              child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => AdView(
-                                              ad: _data[index]['ad']
-                                                  .toString())),
-                                    );
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        _data[index]['type']['ru'].toString(),
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: <Widget>[
-                                          Image.asset(
-                                            'static/img/no-image.png',
-                                            width: 150,
-                                          ),
-                                          Flexible(
-                                              child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: <Widget>[
-                                                Text(
-                                                    _data[index]['city']['ru']),
-                                                Text(_data[index]['district']
-                                                    ['ru']),
-                                                const SizedBox(height: 16),
-                                                Text(
-                                                  _data[index]['info'],
-                                                  maxLines: 3,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ]))
-                                        ],
-                                      )
-                                    ],
-                                  )));
-                        },
-                      )))
-        ]));
-  }
-*/

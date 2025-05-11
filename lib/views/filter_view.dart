@@ -36,6 +36,24 @@ class FilterView extends StatelessWidget {
                           )
                           .toList(),
                     ),
+                    /// City
+                    FormBuilderDropdown(
+                      name: 'city',
+                      decoration:
+                          const InputDecoration(labelText: 'Город'),
+                      items: [
+                        {'value': '1', 'name': 'Алматы'},
+                        {'value': '2', 'name': 'Астана'},
+                        {'value': '3', 'name': 'Шымкент'},
+                      ]
+                          .map(
+                            (item) => DropdownMenuItem(
+                              value: item['value'],
+                              child: Text(item['name']!),
+                            ),
+                          )
+                          .toList(),
+                    ),
                     const SizedBox(height: 10),
                     Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -45,7 +63,9 @@ class FilterView extends StatelessWidget {
                                 if (_formKey.currentState!.saveAndValidate()) {
                                   //print(_formKey.currentState!.value['type']);
                                   final filters = {
-                                    'type': _formKey.currentState!.value['type']
+                                    'type': _formKey.currentState!.value['type'],
+                                    'city': _formKey.currentState!.value['city'],
+                                    'page': '1',
                                   };
                                   //ApiService().getAds({'type': 'ad_go'});
                                   Navigator.pop(context, filters);

@@ -5,7 +5,7 @@ class ApiService {
   //static const host = '127.0.0.1:8000';
   static const host = 'korshiles.kz';
 
-  Future<List<dynamic>> getAds(filter) async {
+  Future<Map<String, dynamic>> getAds(filter) async {
     final apiUrl = Uri.http(host, '/api/index', filter);
     try {
       final response = await http.get(apiUrl);
