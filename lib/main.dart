@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'views/home_view.dart';
+import 'views/create_view.dart';
 import 'views/profile_view.dart';
 import 'widgets/nav.dart';
 
@@ -32,6 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<Widget> _screens = [
     HomeView(),
+    CreateView(),
     ProfileView(),
   ];
 

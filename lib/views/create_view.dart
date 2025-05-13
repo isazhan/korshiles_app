@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
 
-class ProfileView extends StatelessWidget {
+class CreateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
