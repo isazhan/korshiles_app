@@ -96,6 +96,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
+      backgroundColor: Color.fromRGBO(240, 240, 240, 1),
       body: Column(children: [
         
         // Filter and Sort buttons
@@ -106,36 +107,53 @@ class _HomeViewState extends State<HomeView> {
             //mainAxisAlignment: MainAxisAlignment.spaceBetween,
             //crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(totalAds.toString() + ' объявления',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+
+              // Number of ads
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: 10),
+                  padding: EdgeInsets.only(left: 10),
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(totalAds.toString() + ' объявления',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ), 
                 ),
               ),
-              Spacer(),
-              SizedBox(
-                height: 30,
-                child: VerticalDivider(
-                  color: Colors.grey,
-                  width: 1,
+              
+              //Sort button
+              Container(
+                margin: EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.swap_vert,
+                    color: Colors.blue,
+                    )
                 ),
               ),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.swap_vert,
-                  color: Colors.blue,
-                  )
-              ),
-              SizedBox(
-                height: 30,
-                child: VerticalDivider(
-                  color: Colors.grey,
-                  width: 1,
+
+              //Filter button
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ),
-              IconButton(
-                onPressed: () async {
+                child: IconButton(
+                  onPressed: () async {
                   final filters = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => FilterView()),
@@ -144,11 +162,13 @@ class _HomeViewState extends State<HomeView> {
                     _refreshData(filters);
                   }
                 },
-                icon: Icon(
-                  Icons.tune,
-                  color: Colors.blue,
-                  )
-              ),              
+                  icon: Icon(
+                    Icons.tune,
+                    color: Colors.blue,
+                    )
+                ),
+              ),
+                            
             ],
           ),
         ),
@@ -167,10 +187,13 @@ class _HomeViewState extends State<HomeView> {
             );
           }
 
-          return Card(
+          return Container(
                               margin: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-                              elevation: 0,
-                              color: Color.fromRGBO(22, 151, 209, 0.05),
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white,
+                              ),
                               child: InkWell(
                                   onTap: () {
                                     Navigator.push(
@@ -198,6 +221,7 @@ class _HomeViewState extends State<HomeView> {
                                             'static/img/no-image.png',
                                             width: 150,
                                           ),
+                                          const SizedBox(width: 10),
                                           Flexible(
                                               child: Column(
                                                   crossAxisAlignment:
