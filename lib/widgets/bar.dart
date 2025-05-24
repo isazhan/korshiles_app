@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar();
+  final bool exit;
+
+  const CustomAppBar({this.exit = false, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      leading: exit
+          ? IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => MyHomePage()),
+                  (route) => false,
+                );
+              },
+            )
+          : null,
       title: Row(
         children: [
           Image.asset(
