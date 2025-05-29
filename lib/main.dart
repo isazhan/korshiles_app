@@ -3,8 +3,13 @@ import 'views/home_view.dart';
 import 'views/create_view.dart';
 import 'views/profile_view.dart';
 import 'widgets/nav.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb) unawaited(MobileAds.instance.initialize());
   runApp(const MyApp());
 }
 

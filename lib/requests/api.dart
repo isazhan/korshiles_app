@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class ApiService {
   //static const host = '127.0.0.1:8000';
   static const host = 'korshiles.kz';
+  //static const host = '10.0.2.2:8000';
 
   final storage = FlutterSecureStorage();
 
@@ -40,7 +41,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> login(phonenumber, code, password, newpassword) async {
     final response = await http.post(
-      Uri.parse('http://$host/api/api_login'),
+      Uri.parse('https://$host/api/api_login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'phone_number': phonenumber,
@@ -59,7 +60,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
     final response = await http.post(
-      Uri.parse('http://$host/api/token/refresh/'),
+      Uri.parse('https://$host/api/token/refresh/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'refresh': refreshToken}),
     );
@@ -80,7 +81,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('http://$host/api/api_logout'),
+      Uri.parse('https://$host/api/api_logout'),
       headers: {
         'Authorization': 'Bearer $access',
         'Content-Type': 'application/json',
@@ -99,7 +100,7 @@ class ApiService {
     }
     final access = await getAccessToken();
     final response = await http.post(
-      Uri.parse('http://$host/api/create_ad'),
+      Uri.parse('https://$host/api/api_create_ad'),
       headers: {
         'Authorization': 'Bearer $access',
         'Content-Type': 'application/json',

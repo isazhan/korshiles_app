@@ -4,9 +4,13 @@ import '../widgets/bar.dart';
 import 'ad_view.dart';
 import 'filter_view.dart';
 import 'package:intl/intl.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  final AdSize adSize;
+  final String adUnitId = 'ca-app-pub-5754778099148012/4385493179';
+
+  const HomeView({super.key, this.adSize = AdSize.banner});
 
   @override
   _HomeViewState createState() => _HomeViewState();
@@ -19,6 +23,7 @@ class _HomeViewState extends State<HomeView> {
   String selectedDistrict = '';
   String selectedPage = '';
   int totalAds = 0;
+  BannerAd? _bannerAd;
 
   final ScrollController _scrollController = ScrollController();
   bool isLoading = false;
@@ -28,6 +33,7 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _refreshData({'page': '1', 'type': '', 'city': '', 'district': ''});
+    _loadAd();
   }
 
   void _onScroll() {
@@ -64,6 +70,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -91,6 +98,33 @@ class _HomeViewState extends State<HomeView> {
     _refreshData({'page': (int.parse(selectedPage)+1).toString(), 'type': '', 'city': '', 'district': ''});
   }
 
+  void _loadAd() {
+    final bannerAd = BannerAd(
+      size: widget.adSize,
+      adUnitId: widget.adUnitId,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
+          setState(() {
+            _bannerAd = ad as BannerAd;
+          });
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('BannerAd failed to load: $error');
+          ad.dispose();
+        },
+      ),
+    );
+
+    // Start loading.
+    bannerAd.load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +207,18 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
         
+        // Test ads
+        SafeArea(
+          child: SizedBox(
+            width: widget.adSize.width.toDouble(),
+            height: widget.adSize.height.toDouble()+10,
+            child: _bannerAd == null
+                ? const SizedBox()
+                : AdWidget(ad: _bannerAd!),
+          ),
+        ),
+        //AdWidget(ad: _bannerAd!),
+
         // Ads List
         Expanded(child:
       ListView.builder(
