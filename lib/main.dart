@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'views/home_view.dart';
 import 'views/create_view.dart';
 import 'views/profile_view.dart';
+import 'views/login_view.dart';
 import 'widgets/nav.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'controllers/nav_controller.dart';
+import 'controllers/auth_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +37,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0;
+  //int _selectedIndex = 0;
 
   final List<Widget> _screens = [
     HomeView(),
@@ -42,19 +45,31 @@ class _MyHomePageState extends State<MyHomePage> {
     ProfileView(),
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: CustomBottomNav(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+      body: ValueListenableBuilder<int>(
+        valueListenable: navIndexNotifier,
+        builder: (_, index, __) => _screens[index],
+      ),
+      bottomNavigationBar: ValueListenableBuilder<int>(
+        valueListenable: navIndexNotifier,
+        builder: (_, index, __) {
+          return CustomBottomNav(
+            selectedIndex: index,
+            onItemTapped: (newIndex) {
+              if ((newIndex == 1 || newIndex == 2) && !AuthController.isLoggedIn) {
+                AuthController.pendingTabIndex = newIndex;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginView()),
+                );
+                return;
+              }
+              navIndexNotifier.value = newIndex;
+            },
+          );
+        },
       ),
     );
   }

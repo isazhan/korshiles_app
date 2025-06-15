@@ -93,7 +93,19 @@ class ApiService {
     }
   }
 
-  Future<String> createAd(adtest) async {
+  Future<bool> isLoggedIn() async {
+    final accessToken = await storage.read(key: 'access');
+    if (accessToken == null) return false;
+
+    final response = await http.get(
+      Uri.parse('https://$host/api/api_check_token'),
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+
+    return response.statusCode == 200;
+  }
+
+  Future<String> createAd(adData) async {
     final FlutterSecureStorage secureStorage = FlutterSecureStorage();
     Future<String?> getAccessToken() async {
       return await secureStorage.read(key: 'access');
@@ -105,13 +117,11 @@ class ApiService {
         'Authorization': 'Bearer $access',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'adtest': adtest,
-      }),
+      body: jsonEncode(adData),
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return jsonDecode(response.body)['status'];
     } else {
       throw Exception('Failed to create ad');
     }

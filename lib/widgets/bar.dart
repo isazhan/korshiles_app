@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../controllers/nav_controller.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool exit;
@@ -13,10 +14,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () {
+                Navigator.of(context).pop(); // Close the current screen
+                '''
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => MyHomePage()),
                   (route) => false,
                 );
+                ''';
               },
             )
           : null,

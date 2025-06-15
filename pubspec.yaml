@@ -74,6 +74,7 @@ flutter:
   assets:
       - static/img/no-image.png
       - static/img/logo.png
+      - static/cities.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
