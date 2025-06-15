@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'login_view.dart';
-import 'profile_view.dart';
-import '../main.dart';
 import '../controllers/nav_controller.dart';
 import '../requests/api.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -70,7 +67,7 @@ class _CreateViewState extends State<CreateView> {
     });
 
     final response = await ApiService().createAd({
-      'ad_type': _selectedAdType ?? '',
+      'type': _selectedAdType ?? '',
       'city': _selectedCity ?? '',
       'district': _selectedDistrict ?? '',
       'address': _addressController.text,

@@ -24,6 +24,21 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getMyAds(username) async {
+    final apiUrl = Uri.http(host, '/api/api_my_ads', {'phone_number': username});
+    try {
+      final response = await http.get(apiUrl);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      throw Exception('Error fetching data: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> getAd(ad) async {
     final apiUrl = Uri.http(host, '/api/ad', {'ad': ad});
     try {
