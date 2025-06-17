@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/release
 
 .vscode
+
+# AppStore keys
+/ios/AuthKey_9AY69VJU58.p8
+/ios/AuthKey_9AY69VJU58.p8.base64.txt
