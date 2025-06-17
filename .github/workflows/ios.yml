@@ -16,6 +16,8 @@ jobs:
         with:
           flutter-version: '3.32.0'
 
+      - run: flutter clean
+
       - run: flutter pub get
 
       - run: flutter build ios --release --no-codesign
