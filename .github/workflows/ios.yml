@@ -1,0 +1,36 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+
+      - run: flutter pub get
+
+      - run: flutter build ios --release --no-codesign
+
+      - name: Install fastlane
+        run: sudo gem install fastlane -NV
+
+      - name: Decode App Store API Key
+        run: echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ios/AuthKey.p8
+
+      - name: Deploy using fastlane
+        working-directory: ios
+        env:
+          APP_STORE_CONNECT_API_KEY_PATH: ./AuthKey.p8
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          DEVELOPER_TEAM_ID: ${{ secrets.DEVELOPER_TEAM_ID }}
+        run: fastlane beta
