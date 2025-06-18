@@ -11,12 +11,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: List of Xcode versions
+        run: ls /Applications | grep Xcode
+      - name: Current Xcode version
+        run: xcodebuild -version
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.0'
-
-      - run: flutter clean
 
       - run: flutter pub get
 
