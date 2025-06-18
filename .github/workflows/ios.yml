@@ -35,6 +35,27 @@ jobs:
       - name: Install fastlane
         run: sudo gem install fastlane -NV
 
+      - name: Setup Fastlane Config
+        working-directory: ios
+        run: |
+          mkdir -p fastlane
+
+          cat > fastlane/Fastfile <<EOF
+          default_platform(:ios)
+      
+          platform :ios do
+            desc "Push a new beta build to TestFlight"
+            lane :beta do
+              build_app(
+                workspace: "Runner.xcworkspace",
+                scheme: "Runner",
+                export_method: "app-store"
+              )
+              upload_to_testflight
+            end
+          end
+          EOF
+
       - name: Decode App Store API Key
         run: echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ios/AuthKey.p8
 
