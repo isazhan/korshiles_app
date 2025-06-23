@@ -30,8 +30,6 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - run: flutter build ios --release --no-codesign
-
       - name: Install fastlane
         run: sudo gem install fastlane -NV
 
@@ -46,12 +44,25 @@ jobs:
           platform :ios do
             desc "Push a new beta build to TestFlight"
             lane :beta do
+              api_key = app_store_connect_api_key(
+                key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+                key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+                in_house: false
+              )
+              
               build_app(
                 workspace: "Runner.xcworkspace",
                 scheme: "Runner",
-                export_method: "app-store"
+                export_method: "app-store",
+                export_options: {
+                  provisioningProfiles: {
+                    "com.korshiles.app": "match AppStore com.korshiles.app"
+                  }
+                },
+                api_key: api_key
               )
-              upload_to_testflight
+              upload_to_testflight(api_key: api_key)
             end
           end
           EOF
