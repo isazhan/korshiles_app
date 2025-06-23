@@ -62,7 +62,8 @@ jobs:
                   teamID: ENV["DEVELOPER_TEAM_ID"],
                   signingStyle: "automatic"
                 },
-                export_team_id: ENV["DEVELOPER_TEAM_ID"]
+                export_team_id: ENV["DEVELOPER_TEAM_ID"],
+                xcargs: "-allowProvisioningUpdates"
               )
               upload_to_testflight(api_key: api_key)
             end
