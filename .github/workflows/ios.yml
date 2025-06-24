@@ -30,6 +30,27 @@ jobs:
           pod install --repo-update
           cd ..
 
+      - name: Patch bundle identifier and signing style
+        run: |
+          sed -i '' 's/com\.example\.korshilesApp/com.korshiles.app/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = '"${{ secrets.DEVELOPER_TEAM_ID }}"';/g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Install Apple Distribution Certificate
+        run: |
+          echo "${{ secrets.IOS_DISTRIBUTION_P12 }}" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERT_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Install Provisioning Profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
       - name: Install fastlane
         run: sudo gem install fastlane -NV
 
@@ -57,10 +78,10 @@ jobs:
                 export_method: "app-store",
                 export_options: {
                   provisioningProfiles: {
-                    "com.korshiles.app" => "match AppStore com.korshiles.app"
+                    "com.korshiles.app" => "KorshilesProvision"
                   },
                   teamID: ENV["DEVELOPER_TEAM_ID"],
-                  signingStyle: "automatic"
+                  signingStyle: "manual"
                 },
                 export_team_id: ENV["DEVELOPER_TEAM_ID"],
                 xcargs: "-allowProvisioningUpdates"
