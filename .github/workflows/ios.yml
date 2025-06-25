@@ -30,29 +30,16 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: Patch Xcode project for CI signing
+      - name: Patch bundle ID and signing
         run: |
           sed -i '' 's/com\.example\.korshilesApp/com.korshiles.app/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = '"${{ secrets.DEVELOPER_TEAM_ID }}"';/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: Install certificate
-        run: |
-          echo "${{ secrets.IOS_DISTRIBUTION_P12 }}" | base64 --decode > ios_dist.p12
-          security create-keychain -p "" build.keychain
-          security import ios_dist.p12 -k build.keychain -P "${{ secrets.IOS_CERT_PASSWORD }}" -T /usr/bin/codesign
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "" build.keychain
-          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+      - name: Decode API key
+        run: echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ios/AuthKey.p8
 
-      - name: Install provisioning profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROFILE_BASE64 }}" | base64 --decode \
-            > ~/Library/MobileDevice/Provisioning\ Profiles/AppStore_com.korshiles.app.mobileprovision
-
-      - name: Build and archive
+      - name: Build archive
         run: |
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -70,22 +57,20 @@ jobs:
           <plist version="1.0">
           <dict>
             <key>method</key><string>app-store</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadBitcode</key><true/>
+            <key>uploadSymbols</key><true/>
             <key>teamID</key><string>${{ secrets.DEVELOPER_TEAM_ID }}</string>
-            <key>signingStyle</key><string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.korshiles.app</key><string>AppStore_com.korshiles.app</string>
-            </dict>
           </dict>
           </plist>
           EOF
 
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
-            -exportPath build/export \
-            -exportOptionsPlist ExportOptions.plist
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/export
 
-      - name: Upload to TestFlight
+      - name: Upload IPA to TestFlight
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
