@@ -30,75 +30,69 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: Patch bundle identifier and signing style
+      - name: Patch Xcode project for CI signing
         run: |
           sed -i '' 's/com\.example\.korshilesApp/com.korshiles.app/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = '"${{ secrets.DEVELOPER_TEAM_ID }}"';/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: Install Apple Distribution Certificate
+      - name: Install certificate
         run: |
-          echo "${{ secrets.IOS_DISTRIBUTION_P12 }}" | base64 --decode > certificate.p12
+          echo "${{ secrets.IOS_DISTRIBUTION_P12 }}" | base64 --decode > ios_dist.p12
           security create-keychain -p "" build.keychain
+          security import ios_dist.p12 -k build.keychain -P "${{ secrets.IOS_CERT_PASSWORD }}" -T /usr/bin/codesign
           security default-keychain -s build.keychain
           security unlock-keychain -p "" build.keychain
-          security import certificate.p12 -k build.keychain -P "" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-      - name: Install Provisioning Profile
+      - name: Install provisioning profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+          echo "${{ secrets.IOS_PROFILE_BASE64 }}" | base64 --decode \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/AppStore_com.korshiles.app.mobileprovision
 
-      - name: Install fastlane
-        run: sudo gem install fastlane -NV
-
-      - name: Setup Fastlane Config
-        working-directory: ios
+      - name: Build and archive
         run: |
-          mkdir -p fastlane
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            -allowProvisioningUpdates \
+            archive
 
-          cat > fastlane/Fastfile <<EOF
-          default_platform(:ios)
-      
-          platform :ios do
-            desc "Push a new beta build to TestFlight"
-            lane :beta do
-              api_key = app_store_connect_api_key(
-                key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
-                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-                key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
-                in_house: false
-              )
-              
-              build_app(
-                workspace: "Runner.xcworkspace",
-                scheme: "Runner",
-                export_method: "app-store",
-                export_options: {
-                  provisioningProfiles: {
-                    "com.korshiles.app" => "KorshilesProvision"
-                  },
-                  teamID: ENV["DEVELOPER_TEAM_ID"],
-                  signingStyle: "manual"
-                },
-                export_team_id: ENV["DEVELOPER_TEAM_ID"],
-                xcargs: "-allowProvisioningUpdates"
-              )
-              upload_to_testflight(api_key: api_key)
-            end
-          end
+      - name: Export IPA
+        run: |
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${{ secrets.DEVELOPER_TEAM_ID }}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.korshiles.app</key><string>AppStore_com.korshiles.app</string>
+            </dict>
+          </dict>
+          </plist>
           EOF
 
-      - name: Decode App Store API Key
-        run: echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ios/AuthKey.p8
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist ExportOptions.plist
 
-      - name: Deploy using fastlane
-        working-directory: ios
+      - name: Upload to TestFlight
         env:
-          APP_STORE_CONNECT_API_KEY_PATH: ./AuthKey.p8
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          DEVELOPER_TEAM_ID: ${{ secrets.DEVELOPER_TEAM_ID }}
-        run: fastlane beta
+        run: |
+          xcrun altool --upload-app \
+            --type ios \
+            --file build/export/Runner.ipa \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --verbose
