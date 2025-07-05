@@ -9,9 +9,9 @@ jobs:
   deploy:
     runs-on: macos-latest
     env:
-      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
       APP_STORE_APP_ID: com.korshiles.app
       DISTRIBUTION_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_P12 }}
       DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
@@ -34,47 +34,58 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: Install the CodeMagic CLI
-        run:  pip install codemagic-cli-tools
+      # Set up Ruby (for Fastlane)
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
 
-      - name: Initialize keychain
-        run: keychain initialize
-
-      - name: Set up Provisioning Profile
+      # Install Bundler & Fastlane
+      - name: Install Bundler and Fastlane
         run: |
-          PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_HOME"
-          PROFILE_PATH="$(mktemp "$PROFILES_HOME"/$(uuidgen).mobileprovision)"
-          echo ${PROVISIONING_PROFILE} | base64 --decode > "$PROFILE_PATH"
-          echo "Saved provisioning profile $PROFILE_PATH"   
+          cd ios
+          gem install bundler
+          bundle init || true
+          echo 'gem "fastlane"' >> Gemfile
+          bundle install
 
-      - name: Set up Distribution Certificate
+      # Save API Key file for Fastlane
+      - name: Save App Store Connect API Key
         run: |
-          echo $DISTRIBUTION_CERTIFICATE | base64 --decode > /tmp/certificate.p12
-          file /tmp/certificate.p12
-          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $DISTRIBUTION_CERTIFICATE_PASSWORD
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "${APP_STORE_CONNECT_API_KEY}" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
 
-      - name: Set up Code signing settings on Xcode project
-        run: xcode-project use-profiles
-
-      - name: Build IPA for Distribution
+      # Initialize Fastlane if missing
+      - name: Initialize Fastlane (if missing)
         run: |
-          versionString=$(grep 'version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
-          IFS='+' read -r buildName buildOffset <<< "$versionString"
-          buildNumber=$(( buildOffset + ${{ github.run_number }} ))
-          echo "Uploading build $buildName"
-          flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
+          cd ios
+          if [ ! -d "fastlane" ]; then
+            mkdir fastlane
+            cat > fastlane/Fastfile <<EOF
+              default_platform(:ios)
+              
+              platform :ios do
+                desc "Push a new beta build to TestFlight"
+                lane :beta do
+                  build_app(scheme: "Runner",
+                            export_method: "app-store",
+                            export_options: {
+                              provisioningProfiles: {
+                                "com.korshiles.app" => "match AppStore com.korshiles.app"
+                              }
+                            })
+                  upload_to_testflight
+                end
+              end
+              EOF
+            cat > fastlane/Appfile <<EOF
+            app_identifier("com.korshiles.app") # Replace with your app’s bundle ID
+            apple_team_id("T848W2JRH4")         # Replace with your Apple Developer Team ID
+            EOF
+                      fi
 
-      - name: Save App Store Connect API key to file
+      # Build and deploy using Fastlane
+      - name: Deploy to TestFlight
         run: |
-          mkdir -p ~/.private_keys
-          echo "${APP_STORE_CONNECT_PRIVATE_KEY}" > ~/.private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
-
-      - name: Upload IPA to App Store Connect
-        run: |
-          APP_FILE=$(find $(pwd) -name "*.ipa")
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$APP_FILE" \
-            --apiKey "${APP_STORE_CONNECT_KEY_IDENTIFIER}" \
-            --apiIssuer "${APP_STORE_CONNECT_ISSUER_ID}"
+          cd ios
+          bundle exec fastlane beta
