@@ -5,8 +5,12 @@ platform :ios do
   lane :beta do
     build_app(
       scheme: "Runner",
-      export_method: "app-store"
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic"
+      },
     )
+
     upload_to_testflight
   end
 end

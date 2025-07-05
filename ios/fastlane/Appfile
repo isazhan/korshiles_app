@@ -1,2 +1,2 @@
-app_identifier("com.korshiles.app") # Replace with your app’s bundle ID
-apple_team_id("T848W2JRH4")         # Replace with your Apple Developer Team ID
+app_identifier("com.korshiles.app")
+team_id("T848W2JRH4")
