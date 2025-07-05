@@ -68,5 +68,8 @@ jobs:
       - name: Upload IPA to App Store Connect
         run: |
           APP_FILE=$(find $(pwd) -name "*.ipa")
-          app-store-connect publish \
-            --path "$APP_FILE"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$APP_FILE" \
+            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
