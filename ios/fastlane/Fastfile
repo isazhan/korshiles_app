@@ -7,8 +7,9 @@ platform :ios do
       scheme: "Runner",
       export_method: "app-store",
       export_options: {
-        signingStyle: "automatic"
+        signingStyle: "automatic" # Enable automatic signing
       },
+      xcargs: "-allowProvisioningUpdates" # Let Xcode create profiles
     )
 
     upload_to_testflight
