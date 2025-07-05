@@ -59,13 +59,9 @@ jobs:
 
       - name: Build IPA for Distribution
         run: |
-          file='VERSION'
-          fileData=`cat $file`
-          IFS='.'
-          read -a versionValue <<< "$fileData"
-          buildNumber=$(( ${versionValue[0]} * 1000000 + ${versionValue[1]} * 10000 + ${{ github.run_number }} ))
-          IFS=''
-          buildName="${versionValue[0]}.${versionValue[1]}.${{ github.run_number }}"
+          versionString=$(grep 'version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
+          IFS='+' read -r buildName buildOffset <<< "$versionString"
+          buildNumber=$(( buildOffset + ${{ github.run_number }} ))
           echo "Uploading build $buildName"
           flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
 
