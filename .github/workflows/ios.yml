@@ -54,35 +54,7 @@ jobs:
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
           echo "${APP_STORE_CONNECT_API_KEY}" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
-
-      # Initialize Fastlane if missing
-      - name: Initialize Fastlane (if missing)
-        run: |
-          cd ios
-          if [ ! -d "fastlane" ]; then
-            mkdir fastlane
-            cat <<'EOF' > fastlane/Fastfile
-              default_platform(:ios)
-              
-              platform :ios do
-                desc "Push a new beta build to TestFlight"
-                lane :beta do
-                  build_app(
-                    scheme: "Runner",
-                    export_method: "app-store"
-                  )
-                  upload_to_testflight
-                end
-              end
-              EOF
-      
-            cat <<'EOF' > fastlane/Appfile
-              app_identifier("com.korshiles.app") # Replace with your app’s bundle ID
-              apple_team_id("T848W2JRH4")         # Replace with your Apple Developer Team ID
-              EOF
-            fi
-
-
+    
       # Build and deploy using Fastlane
       - name: Deploy to TestFlight
         run: |
