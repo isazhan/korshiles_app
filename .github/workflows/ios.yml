@@ -65,11 +65,16 @@ jobs:
           echo "Uploading build $buildName"
           flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
 
+      - name: Save App Store Connect API key to file
+        run: |
+          mkdir -p ~/.private_keys
+          echo "${APP_STORE_CONNECT_PRIVATE_KEY}" > ~/.private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+
       - name: Upload IPA to App Store Connect
         run: |
           APP_FILE=$(find $(pwd) -name "*.ipa")
           xcrun altool --upload-app \
             --type ios \
             --file "$APP_FILE" \
-            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            --apiKey "${APP_STORE_CONNECT_KEY_IDENTIFIER}" \
+            --apiIssuer "${APP_STORE_CONNECT_ISSUER_ID}"
