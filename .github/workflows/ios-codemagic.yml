@@ -29,6 +29,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.0'
+          cache: true
 
       - run: |
           flutter clean
@@ -70,14 +71,13 @@ jobs:
 
       - name: Save App Store Connect API Key
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "${APP_STORE_CONNECT_PRIVATE_KEY}" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+          echo "${APP_STORE_CONNECT_PRIVATE_KEY}" > /Users/runner/work/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+
+      - name: Install Fastlane
+        run: sudo gem install fastlane
 
       - name: Upload IPA to App Store Connect
         run: |
-          APP_FILE=$(find $(pwd) -name "*.ipa")
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$APP_FILE" \
-            --apiKey $APP_STORE_CONNECT_KEY_IDENTIFIER \
-            --apiIssuer $APP_STORE_CONNECT_ISSUER_ID
+          fastlane pilot upload \
+          --ipa $(find $(pwd) -name "*.ipa") \
+          --api_key_path /Users/runner/work/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
