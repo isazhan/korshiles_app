@@ -71,11 +71,12 @@ jobs:
 
       - name: Save App Store Connect API Key
         run: |
+          SAFE_KEY=$(echo "${APP_STORE_CONNECT_PRIVATE_KEY}" | awk '{printf "%s\\n", $0}')
           cat <<EOF > /Users/runner/work/AuthKey.json
           {
             "key_id": "${APP_STORE_CONNECT_KEY_IDENTIFIER}",
             "issuer_id": "${APP_STORE_CONNECT_ISSUER_ID}",
-            "key": "${APP_STORE_CONNECT_PRIVATE_KEY}"
+            "key": "${SAFE_KEY}"
           }
           EOF
 
