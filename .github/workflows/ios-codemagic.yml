@@ -73,3 +73,5 @@ jobs:
           APP_FILE=$(find $(pwd) -name "*.ipa")
           app-store-connect publish \
           --path "$APP_FILE"
+
+
