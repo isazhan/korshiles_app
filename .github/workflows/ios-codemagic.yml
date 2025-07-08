@@ -2,8 +2,8 @@ name: Deploy to TestFlight
 
 on:
   push:
-    tags:
-      - 'codemagic*'
+    branches:
+      - master
 
 jobs:
   deploy:
@@ -73,5 +73,3 @@ jobs:
           APP_FILE=$(find $(pwd) -name "*.ipa")
           app-store-connect publish \
           --path "$APP_FILE"
-
-
