@@ -83,6 +83,9 @@ jobs:
       - name: Install Fastlane
         run: sudo gem install fastlane
 
+      - name: Sync System Clock
+        run: sudo sntp -sS time.apple.com || true
+
       - name: Upload IPA to App Store Connect
         run: |
           fastlane pilot upload \
