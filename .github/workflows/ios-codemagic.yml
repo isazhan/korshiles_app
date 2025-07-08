@@ -81,7 +81,7 @@ jobs:
           EOF
 
       - name: Install Fastlane
-        run: sudo gem install fastlane
+        run: sudo gem install fastlane -v 2.227.2
 
       - name: Sync System Clock
         run: sudo sntp -sS time.apple.com || true
