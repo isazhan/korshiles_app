@@ -71,7 +71,13 @@ jobs:
 
       - name: Save App Store Connect API Key
         run: |
-          echo "${APP_STORE_CONNECT_PRIVATE_KEY}" > /Users/runner/work/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+          cat <<EOF > /Users/runner/work/AuthKey.json
+          {
+            "key_id": "${APP_STORE_CONNECT_KEY_IDENTIFIER}",
+            "issuer_id": "${APP_STORE_CONNECT_ISSUER_ID}",
+            "key": "${APP_STORE_CONNECT_PRIVATE_KEY}"
+          }
+          EOF
 
       - name: Install Fastlane
         run: sudo gem install fastlane
@@ -80,4 +86,4 @@ jobs:
         run: |
           fastlane pilot upload \
           --ipa $(find $(pwd) -name "*.ipa") \
-          --api_key_path /Users/runner/work/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+          --api_key_path /Users/runner/work/AuthKey.json
