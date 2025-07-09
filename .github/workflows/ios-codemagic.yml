@@ -76,8 +76,7 @@ jobs:
           {
             "key_id": "${APP_STORE_CONNECT_KEY_IDENTIFIER}",
             "issuer_id": "${APP_STORE_CONNECT_ISSUER_ID}",
-            "key": "${SAFE_KEY}",
-            "duration": 500
+            "key": "${SAFE_KEY}"
           }
           EOF
 
