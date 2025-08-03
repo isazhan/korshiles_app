@@ -140,6 +140,26 @@ class AdView extends StatelessWidget {
                   description,
                   style: const TextStyle(fontSize: 16),
                 ),
+
+                SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: () async {
+                    final Uri emailLaunchUri = Uri(
+                      scheme: 'mailto',
+                      path: 'bestlogin9696@gmail.com',
+                      queryParameters: {
+                        'subject': 'Вопрос по объявлению: $ad',
+                        'body': 'Здравствуйте, у меня есть вопрос по вашему объявлению "$ad".'
+                      }
+                    );
+                  },
+                  child: const Text('Пожаловаться на объявление'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.redAccent,
+                  ),
+                )
               ],
             );
           }

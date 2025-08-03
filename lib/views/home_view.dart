@@ -5,12 +5,17 @@ import 'ad_view.dart';
 import 'filter_view.dart';
 import 'package:intl/intl.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io';
 
 class HomeView extends StatefulWidget {
   final AdSize adSize;
-  final String adUnitId = 'ca-app-pub-5754778099148012/4385493179';
+  final String adUnitId = Platform.isAndroid
+    // for Andriod
+    ? 'ca-app-pub-5754778099148012/4385493179'
+    // for iOS
+    : 'ca-app-pub-3940256099942544/6300978111';
 
-  const HomeView({super.key, this.adSize = AdSize.banner});
+  HomeView({super.key, this.adSize = AdSize.largeBanner});
 
   @override
   _HomeViewState createState() => _HomeViewState();
@@ -147,7 +152,7 @@ class _HomeViewState extends State<HomeView> {
                 child: Container(
                   margin: EdgeInsets.only(right: 10),
                   padding: EdgeInsets.only(left: 10),
-                  height: 40,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -206,18 +211,6 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
         ),
-        
-        // Test ads
-        SafeArea(
-          child: SizedBox(
-            width: widget.adSize.width.toDouble(),
-            height: widget.adSize.height.toDouble()+10,
-            child: _bannerAd == null
-                ? const SizedBox()
-                : AdWidget(ad: _bannerAd!),
-          ),
-        ),
-        //AdWidget(ad: _bannerAd!),
 
         // Ads List
         Expanded(child:
@@ -230,6 +223,18 @@ class _HomeViewState extends State<HomeView> {
           if (index == _data.length) {
             return Center(
               child: CircularProgressIndicator(),
+            );
+          }
+
+          // Admob
+          if (index == 2) {
+            return Container(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              width: widget.adSize.width.toDouble(),
+              height: widget.adSize.height.toDouble(),
+              child: _bannerAd == null
+                  ? const SizedBox()
+                  : AdWidget(ad: _bannerAd!),
             );
           }
 

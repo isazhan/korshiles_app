@@ -139,7 +139,7 @@ class _LoginViewState extends State<LoginView> {
                   text: TextSpan(
                     children: <TextSpan>[
                       TextSpan(
-                        text: 'Прежде чем продолжить, поделитесь своим номером телефона с нашим ботом в Telegram: \n',
+                        text: 'Продолжая вы принимаете \n',
                         style: TextStyle(
                           fontSize: 14,
                           //fontWeight: FontWeight.w600,
@@ -147,14 +147,14 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ),
                       TextSpan(
-                        text: '@korshiles_bot \n\n',
+                        text: 'Пользовательское соглашение',
                         style: const TextStyle(
                           color: Colors.blue,
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () async{
-                            final Uri url = Uri(scheme: 'https', host: 't.me', path: 'korshiles_bot');
+                            final Uri url = Uri(scheme: 'https', host: 'korshiles.kz', path: 'terms');
                             print(url.toString());
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url);
@@ -163,13 +163,13 @@ class _LoginViewState extends State<LoginView> {
                             }
                           }
                       ),
-                      TextSpan(
+                      /*TextSpan(
                         text: 'Так мы сможем отправить вам код верификации.',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.black,
                         ),
-                      ),
+                      ),*/
                     ],
                   )
                 ),
