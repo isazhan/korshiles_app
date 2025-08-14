@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:korshiles_app/requests/api.dart';
 import '../widgets/bar.dart';
@@ -268,10 +269,9 @@ class _HomeViewState extends State<HomeView> {
                                       ),
                                       Row(
                                         children: <Widget>[
-                                          Image.asset(
-                                            'static/img/no-image.png',
-                                            width: 150,
-                                          ),
+                                            _data[index]['photos'] != null
+                                                ? Image.memory(base64Decode(_data[index]['photos'][0].toString()), height: 100, width: 150, fit: BoxFit.cover,)
+                                                : Image.asset('static/img/no-image.png', height: 100, width: 150, fit: BoxFit.cover),
                                           const SizedBox(width: 10),
                                           Flexible(
                                               child: Column(

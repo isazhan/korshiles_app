@@ -108,6 +108,23 @@ class ApiService {
     }
   }
 
+  Future<void> deleteAccount() async {
+    final access = await storage.read(key: 'access');
+    final refresh = await storage.read(key: 'refresh');
+    
+    if (access == null || refresh == null) {
+      throw Exception('Missing tokens');
+    }
+
+    final response = await http.post(
+      Uri.parse('https://$host/api/api_delete_account'),
+      headers: {
+        'Authorization': 'Bearer $access',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
+
   Future<bool> isLoggedIn() async {
     final accessToken = await storage.read(key: 'access');
     if (accessToken == null) return false;

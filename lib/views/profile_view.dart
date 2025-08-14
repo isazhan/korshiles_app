@@ -48,6 +48,38 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
+  Future<void> _showConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Удалить аккаунт'),
+          content: const Text('Вы уверены, что хотите удалить аккаунт?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Отмена'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Удалить'),
+              onPressed: () {
+                ApiService().deleteAccount();
+                logout(context);
+                Navigator.of(context).pop(); // Close the dialog
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Аккаунт удален')),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void logout(BuildContext context) async {
     await ApiService().logout();
     AuthController.isLoggedIn = false;
@@ -229,9 +261,19 @@ class _ProfileViewState extends State<ProfileView> {
                   )
                 ),
               
-
+                // Delete account button
+                ElevatedButton(
+                  onPressed: () {
+                    _showConfirmationDialog(context);
+                  },
+                  child: Text('Удалить аккаунт'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.redAccent,
+                  )
+                ),
               
-              ],              
+              ],
             )
             
 
