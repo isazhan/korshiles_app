@@ -58,6 +58,14 @@ class _LoginViewState extends State<LoginView> {
       case 'code_sent':
         setState(() => _showCodeField = true);
         break;
+      case 'user_not_found':
+        final Uri url = Uri(scheme: 'https', host: 't.me', path: 'korshiles_bot');
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url);
+        } else {
+          throw 'Could not launch $url';
+        }
+        break;
       case 'user_exist':
         setState(() => _showPasswordField = true);
         break;
@@ -122,56 +130,6 @@ class _LoginViewState extends State<LoginView> {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
-                ),
-              ), 
-            ),
-            Container(
-              margin: EdgeInsets.only(top: 10),
-              padding: EdgeInsets.only(left: 10),
-              //height: 40,
-              decoration: BoxDecoration(
-                color: Color.fromRGBO(207, 226, 255, 1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Align(
-                alignment: Alignment.center,
-                child: RichText(
-                  text: TextSpan(
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: 'Продолжая вы принимаете \n',
-                        style: TextStyle(
-                          fontSize: 14,
-                          //fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                      TextSpan(
-                        text: 'Пользовательское соглашение',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async{
-                            final Uri url = Uri(scheme: 'https', host: 'korshiles.kz', path: 'terms');
-                            print(url.toString());
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url);
-                            } else {
-                              throw 'Could not launch $url';
-                            }
-                          }
-                      ),
-                      /*TextSpan(
-                        text: 'Так мы сможем отправить вам код верификации.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
-                      ),*/
-                    ],
-                  )
                 ),
               ), 
             ),
@@ -270,9 +228,59 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ), 
               ),
-            const SizedBox(height: 16),
             if (_error != null)
               Text(_error!, style: const TextStyle(color: Colors.red)),
+            Container(
+              margin: EdgeInsets.only(top: 10),
+              padding: EdgeInsets.only(left: 10),
+              //height: 40,
+              //decoration: BoxDecoration(
+                //color: Color.fromRGBO(207, 226, 255, 1),
+                //borderRadius: BorderRadius.circular(10),
+              //),
+              child: Align(
+                alignment: Alignment.center,
+                child: RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: 'Продолжая вы принимаете ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          //fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'Пользовательское соглашение',
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async{
+                            final Uri url = Uri(scheme: 'https', host: 'korshiles.kz', path: 'terms');
+                            print(url.toString());
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            } else {
+                              throw 'Could not launch $url';
+                            }
+                          }
+                      ),
+                      /*TextSpan(
+                        text: 'Так мы сможем отправить вам код верификации.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                      ),*/
+                    ],
+                  )
+                ),
+              ), 
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromRGBO(22, 151, 209, 1),

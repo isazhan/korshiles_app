@@ -215,7 +215,9 @@ class _HomeViewState extends State<HomeView> {
 
         // Ads List
         Expanded(child:
-      ListView.builder(
+        RefreshIndicator(
+          onRefresh: () => _refreshData({'page': '1', 'type': selectedType, 'city': selectedCity, 'district': selectedCity}),
+          child: ListView.builder(
         controller: _scrollController,
         itemCount: _data.length + (isLoading ? 1 : 0),
         itemBuilder: (context, index) {
@@ -304,7 +306,7 @@ class _HomeViewState extends State<HomeView> {
                                     ],
                                   )));
         }
-      ),
+      ))
         ),
 
       ]),

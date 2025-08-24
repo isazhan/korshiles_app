@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
 import 'package:korshiles_app/requests/api.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:convert';
 
 class AdView extends StatelessWidget {
   final String ad;
@@ -24,7 +25,7 @@ class AdView extends StatelessWidget {
           } else {
             final data = snapshot.data!;
             final title = data['type']['ru'] as String? ?? 'No Title';
-            final images = (data['images'] as List?)?.cast<String>() ?? [];
+            final images = (data['photos'] as List?)?.cast<String>() ?? [];
             final city = data['city']['ru'] as String? ?? 'No city';
             final district = data['district']['ru'] as String? ?? 'No district';
             final address = data['address'] as String? ?? 'No address';
@@ -50,8 +51,8 @@ class AdView extends StatelessWidget {
                     items: images.map((imageUrl) {
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(8.0),
-                        child: Image.network(
-                          imageUrl,
+                        child: Image.memory(
+                          base64Decode(imageUrl.toString()),
                           fit: BoxFit.cover,
                           width: double.infinity,
                         ),
@@ -61,6 +62,7 @@ class AdView extends StatelessWidget {
                       height: 200.0,
                       enlargeCenterPage: true,
                       autoPlay: true,
+                      enableInfiniteScroll: false
                     ),
                   )
                 else
