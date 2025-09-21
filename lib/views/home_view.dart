@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:korshiles_app/requests/api.dart';
 import '../widgets/bar.dart';
-import 'ad_view.dart';
 import 'filter_view.dart';
-import 'package:intl/intl.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io';
+import '../widgets/ad_card.dart';
+import '../globals.dart' as globals;
 
 class HomeView extends StatefulWidget {
   final AdSize adSize;
@@ -240,71 +240,20 @@ class _HomeViewState extends State<HomeView> {
                   : AdWidget(ad: _bannerAd!),
             );
           }
-
-          return Container(
-                              margin: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white,
-                              ),
-                              child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => AdView(
-                                              ad: _data[index]['ad']
-                                                  .toString())),
-                                    );
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        _data[index]['type']['ru'].toString() + ' ' + _data[index]['ad'].toString(),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: <Widget>[
-                                            _data[index]['photos'] != null
-                                                ? Image.memory(base64Decode(_data[index]['photos'][0].toString()), height: 100, width: 150, fit: BoxFit.cover,)
-                                                : Image.asset('static/img/no-image.png', height: 100, width: 150, fit: BoxFit.cover),
-                                          const SizedBox(width: 10),
-                                          Flexible(
-                                              child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: <Widget>[
-                                                Text(_data[index]['city']['ru'] ?? ''),
-                                                //Text(_data[index]['district']['ru'] ?? ''),
-                                                const SizedBox(height: 16),
-                                                Text(
-                                                  _data[index]['info'],
-                                                  maxLines: 3,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 16),
-                                                Row(
-                                                  children: [
-                                                    Icon(Icons.visibility, color: Colors.grey, size: 16),
-                                                    Text(_data[index]['views'].toString()),
-                                                    Spacer(),
-                                                    Text(
-                                                      DateFormat('d.MM.yyyy').format(DateTime.parse(_data[index]['create_time'].toString())).toString(),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ]))
-                                        ],
-                                      )
-                                    ],
-                                  )));
+          return AdCard(
+            title: _data[index]['type']['ru'],
+            ad: _data[index]['ad'].toString(),
+            photos: (_data[index]['photos'] != null)
+                ? globals.host + _data[index]['photos'][0]
+                : 'no',
+            city: _data[index]['city']['ru'],
+            district: (_data[index]['district'] != '')
+                ? _data[index]['district']['ru']
+                : '',
+            description: _data[index]['info'],
+            views: _data[index]['views'].toString(),
+            date: _data[index]['create_time'].toString(),
+          );
         }
       ))
         ),

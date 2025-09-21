@@ -3,6 +3,8 @@ import '../widgets/bar.dart';
 import 'package:korshiles_app/requests/api.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'dart:convert';
+import '../globals.dart' as globals;
+import 'package:flutter/services.dart';
 
 class AdView extends StatelessWidget {
   final String ad;
@@ -27,7 +29,9 @@ class AdView extends StatelessWidget {
             final title = data['type']['ru'] as String? ?? 'No Title';
             final images = (data['photos'] as List?)?.cast<String>() ?? [];
             final city = data['city']['ru'] as String? ?? 'No city';
-            final district = data['district']['ru'] as String? ?? 'No district';
+            final district = (data['district'] != '')
+                ? data['district']['ru'] as String
+                : '';
             final address = data['address'] as String? ?? 'No address';
             final contact = data['contact'] as String? ?? 'No contact';
             final description = data['info'] as String? ?? 'No description';
@@ -51,8 +55,8 @@ class AdView extends StatelessWidget {
                     items: images.map((imageUrl) {
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(8.0),
-                        child: Image.memory(
-                          base64Decode(imageUrl.toString()),
+                        child: Image.network(
+                          globals.host + imageUrl.toString(),
                           fit: BoxFit.cover,
                           width: double.infinity,
                         ),
@@ -123,10 +127,24 @@ class AdView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  contact,
-                  style: const TextStyle(fontSize: 16),
+                Row(
+                  children: [
+                    Text(
+                      '+' + contact.substring(0, 1) + ' ' + contact.substring(1, 4) + ' ' + contact.substring(4, 7) + ' ' + contact.substring(7, 9) + ' ' + contact.substring(9, 11),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.copy, color: Colors.blue),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: '+'+contact));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Контакт скопирован в буфер обмена')),
+                        );
+                      },
+                    ),
+                  ],
                 ),
+                
                 const SizedBox(height: 16),
 
                 // Description
