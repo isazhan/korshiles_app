@@ -66,7 +66,7 @@ class _CreateViewState extends State<CreateView> {
       _error = null;
     });
 
-    final response = await ApiService().createAd({
+    final response = await ApiService().postWithAuth('api/api_create_ad', {
       'type': _selectedAdType ?? '',
       'city': _selectedCity ?? '',
       'district': _selectedDistrict ?? '',
@@ -75,7 +75,7 @@ class _CreateViewState extends State<CreateView> {
       'contact': _contactController.text,
     });
 
-    if (response == 'ok') {
+    if (response['status'] == 'ok') {
       setState(() {
         _loading = false;
         _error = null;
@@ -86,7 +86,7 @@ class _CreateViewState extends State<CreateView> {
     } else {
       setState(() {
         _loading = false;
-        _error = response ?? 'Произошла ошибка';
+        _error = response['status'] ?? 'Произошла ошибка';
       });
     }
   }

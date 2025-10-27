@@ -14,7 +14,7 @@ class HomeView extends StatefulWidget {
     // for Andriod
     ? 'ca-app-pub-5754778099148012/4385493179'
     // for iOS
-    : 'ca-app-pub-3940256099942544/6300978111';
+    : 'ca-app-pub-5754778099148012/1363290074';
 
   HomeView({super.key, this.adSize = AdSize.largeBanner});
 
@@ -54,7 +54,7 @@ class _HomeViewState extends State<HomeView> {
       isLoading = true;
     });
     try {
-      final moreData = await ApiService().getAds({
+      final moreData = await ApiService().justGet('api/index', {
         'page': (int.parse(selectedPage) + 1).toString(),
         'type': selectedType,
         'city': selectedCity,
@@ -82,7 +82,7 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _refreshData(filter) async {
     try {
-      final refreshedData = await ApiService().getAds(filter);
+      final refreshedData = await ApiService().justGet('api/index', filter);
       setState(() {
         _data = refreshedData['ads'] ?? [];
         selectedType = filter['type'] ?? '';
@@ -138,7 +138,7 @@ class _HomeViewState extends State<HomeView> {
       appBar: CustomAppBar(),
       backgroundColor: Color.fromRGBO(240, 240, 240, 1),
       body: Column(children: [
-        
+
         // Filter and Sort buttons
         Container(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -170,21 +170,6 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ),
               
-              //Sort button
-              Container(
-                margin: EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.swap_vert,
-                    color: Colors.blue,
-                    )
-                ),
-              ),
 
               //Filter button
               Container(

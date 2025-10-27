@@ -2,12 +2,15 @@ import 'dart:convert';
 import 'ad_view.dart';
 import 'package:flutter/material.dart';
 import 'package:korshiles_app/requests/api.dart';
+import 'package:korshiles_app/requests/auth.dart';
 import '../widgets/bar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'login_view.dart';
 import '../controllers/nav_controller.dart';
 import '../controllers/auth_controller.dart';
 import 'package:intl/intl.dart';
+import '../globals.dart' as globals;
+import 'my_ads_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({Key? key}) : super(key: key);
@@ -40,7 +43,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _loadMyAds() async {
-    final response = await ApiService().getMyAds(_userName);
+    final response = await ApiService().justGet('api/api_my_ads', {'phone_number': _userName});
     if (response != null) {
       setState(() {
         _data = response['ads'] ?? [];
@@ -66,7 +69,7 @@ class _ProfileViewState extends State<ProfileView> {
             TextButton(
               child: const Text('Удалить'),
               onPressed: () {
-                ApiService().deleteAccount();
+                //ApiService().deleteAccount();
                 logout(context);
                 Navigator.of(context).pop(); // Close the dialog
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +84,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   void logout(BuildContext context) async {
-    await ApiService().logout();
+    await AuthService().logout();
     AuthController.isLoggedIn = false;
     navIndexNotifier.value = 0; // Switch to HomeView
   }
@@ -98,6 +101,7 @@ class _ProfileViewState extends State<ProfileView> {
         if (snapshot.hasData && snapshot.data == true) {
           return Scaffold(
             appBar: CustomAppBar(),
+            backgroundColor: globals.myBackColor,
             body: Column(
               children: [
                 Container(
@@ -108,8 +112,8 @@ class _ProfileViewState extends State<ProfileView> {
                       //Number
                       Expanded(
                         child: Container(
-                          margin: EdgeInsets.only(right: 10),
-                          padding: EdgeInsets.only(left: 10),
+                          //margin: EdgeInsets.symmetric(horizontal: 10),
+                          padding: EdgeInsets.symmetric(horizontal: 10),
                           height: 40,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -127,156 +131,127 @@ class _ProfileViewState extends State<ProfileView> {
                         ),
                       ),
 
-                      //Logout Button
-                      Container(
-                        margin: EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: IconButton(
-                          onPressed: () => logout(context),
-                          icon: Icon(
-                            Icons.logout,
-                            color: Colors.blue,
-                            )
-                        ),
-                      ),
-
                     ],
                   ),
                 ),
 
-                // Text
+                // My ads
                 Container(
-                  //margin: EdgeInsets.only(right: 10),
-                  padding: EdgeInsets.only(left: 10),
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text('Мои объявления',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ), 
-                ),
-
-                // My Ads List
-                Expanded(child: 
-                  ListView.builder(
-                    itemCount: _data.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white,
-                              ),
-                              child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => AdView(
-                                              ad: _data[index]['ad']
-                                                  .toString())),
-                                    );
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        _data[index]['type']['ru'].toString() + ' ' + _data[index]['ad'].toString(),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      
-                                      Container(
-                                        padding: EdgeInsets.all(5),
-                                        decoration: BoxDecoration(
-                                          color: (_data[index]['publish'] == true)
-                                              ? Colors.green[100]
-                                              : Colors.orange[100],
-                                          borderRadius: BorderRadius.circular(5),
-                                        ),
-                                        child: Text(
-                                          (_data[index]['publish'] == true)
-                                              ? 'Опубликовано'
-                                              : 'На проверке',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ),
-
-                                      Row(
-                                        children: <Widget>[
-                                          Image.asset(
-                                            'static/img/no-image.png',
-                                            width: 150,
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Flexible(
-                                              child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: <Widget>[
-                                                Text(_data[index]['city']['ru'] ?? ''),
-                                                //Text(_data[index]['district']['ru'] ?? ''),
-                                                const SizedBox(height: 16),
-                                                Text(
-                                                  _data[index]['info'],
-                                                  maxLines: 3,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 16),
-                                                Row(
-                                                  children: [
-                                                    Icon(Icons.visibility, color: Colors.grey, size: 16),
-                                                    Text(_data[index]['views'].toString()),
-                                                    Spacer(),
-                                                    Text(
-                                                      DateFormat('d.MM.yyyy').format(DateTime.parse(_data[index]['create_time'].toString())).toString(),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ]))
-                                        ],
-                                      )
-                                    ],
-                                  ))
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyAdsView(user: _userName,)),
                       );
                     },
-                  )
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.list, color: globals.myColor, size: 16),
+                              SizedBox(width: 10),
+                              Text(
+                                'Мои объявления',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
                 ),
-              
-                // Delete account button
-                ElevatedButton(
-                  onPressed: () {
-                    _showConfirmationDialog(context);
-                  },
-                  child: Text('Удалить аккаунт'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.redAccent,
-                  )
+
+
+                SizedBox(height: 10),
+
+
+                // Delete account
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      _showConfirmationDialog(context);
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: globals.myColor, size: 16),
+                              SizedBox(width: 10),
+                              Text(
+                                'Удалить аккаунт',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
                 ),
+
+
+                // Logout
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: InkWell(
+                    onTap: () => logout(context),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout, color: globals.myColor, size: 16),
+                              SizedBox(width: 10),
+                              Text(
+                                'Выйти',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+
               
               ],
             )
-            
-
           );
         } else {
           

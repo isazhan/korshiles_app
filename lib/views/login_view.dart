@@ -8,6 +8,8 @@ import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/nav_controller.dart';
 import '../controllers/auth_controller.dart';
+import '../requests/auth.dart';
+import '../globals.dart' as globals;
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -45,7 +47,7 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    final response = await ApiService().login(
+    final response = await AuthService().login( // ApiService().login(
       '7$phone',
       _codeController.text.trim(),
       _passwordController.text.trim(),
@@ -77,10 +79,10 @@ class _LoginViewState extends State<LoginView> {
         });
         break;
       case 'login':
-        await _secureStorage.write(key: 'access', value: response['access']);
-        await _secureStorage.write(key: 'refresh', value: response['refresh']);
-        final user = response['user'];
-        await _secureStorage.write(key: 'user', value: jsonEncode(response['user']));
+        //await _secureStorage.write(key: 'access', value: response['access']);
+        //await _secureStorage.write(key: 'refresh', value: response['refresh']);
+        //final user = response['user'];
+        //await _secureStorage.write(key: 'user', value: jsonEncode(response['user']));
         if (!mounted) return;
 
         AuthController.isLoggedIn = true;
@@ -110,6 +112,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(exit: true,),
+      backgroundColor: globals.myBackColor,
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
@@ -238,8 +241,8 @@ class _LoginViewState extends State<LoginView> {
                 //color: Color.fromRGBO(207, 226, 255, 1),
                 //borderRadius: BorderRadius.circular(10),
               //),
-              child: Align(
-                alignment: Alignment.center,
+              child: Center(
+                //alignment: Alignment.center,
                 child: RichText(
                   text: TextSpan(
                     children: <TextSpan>[

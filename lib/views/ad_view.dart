@@ -16,7 +16,7 @@ class AdView extends StatelessWidget {
     return Scaffold(
       appBar: CustomAppBar(),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: ApiService().getAd(ad),
+        future: ApiService().justGet('api/ad', {'ad': ad}),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
