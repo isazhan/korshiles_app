@@ -24,12 +24,12 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   List<dynamic> _data = [];
+  List<BannerAd> _bannerAd = [];
   String selectedType = '';
   String selectedCity = '';
   String selectedDistrict = '';
   String selectedPage = '';
   int totalAds = 0;
-  BannerAd? _bannerAd;
 
   final ScrollController _scrollController = ScrollController();
   bool isLoading = false;
@@ -75,8 +75,10 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   void dispose() {
+    for (var ad in _bannerAd) {
+      ad.dispose();
+    }
     _scrollController.dispose();
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -105,31 +107,22 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _loadAd() {
-    final bannerAd = BannerAd(
-      size: widget.adSize,
-      adUnitId: widget.adUnitId,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        // Called when an ad is successfully received.
-        onAdLoaded: (ad) {
-          if (!mounted) {
+    // For example, load 5 banner ads
+    for (int i = 0; i < 5; i++) {
+      final ad = BannerAd(
+        adUnitId: widget.adUnitId,
+        size: widget.adSize,
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) => setState(() {}),
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('Ad failed to load: $error');
             ad.dispose();
-            return;
-          }
-          setState(() {
-            _bannerAd = ad as BannerAd;
-          });
-        },
-        // Called when an ad request failed.
-        onAdFailedToLoad: (ad, error) {
-          debugPrint('BannerAd failed to load: $error');
-          ad.dispose();
-        },
-      ),
-    );
-
-    // Start loading.
-    bannerAd.load();
+          },
+        ),
+      )..load();
+      _bannerAd.add(ad);
+    }
   }
 
   @override
@@ -214,17 +207,42 @@ class _HomeViewState extends State<HomeView> {
             );
           }
 
-          // Admob
-          if (index == 2) {
-            return Container(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              width: widget.adSize.width.toDouble(),
-              height: widget.adSize.height.toDouble(),
-              child: _bannerAd == null
-                  ? const SizedBox()
-                  : AdWidget(ad: _bannerAd!),
+          // Ads + Admob
+          if (index == 2 || (index > 2 && (index - 2) % 4 == 0)) {
+            final adIndex = ((index - 2) ~/ 4) % _bannerAd.length;
+            final ad = _bannerAd[adIndex];
+
+            return Column(
+              children: [
+                // Admob
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 10),
+                  width: widget.adSize.width.toDouble(),
+                  height: widget.adSize.height.toDouble(),
+                  child: AdWidget(ad: ad),
+                  //child: const SizedBox(),
+                ),
+
+                // Ad
+                AdCard(
+                  title: _data[index]['type']['ru'],
+                  ad: _data[index]['ad'].toString(),
+                  photos: (_data[index]['photos'] != null)
+                      ? globals.host + _data[index]['photos'][0]
+                      : 'no',
+                  city: _data[index]['city']['ru'],
+                  district: (_data[index]['district'] != '')
+                      ? _data[index]['district']['ru']
+                      : '',
+                  description: _data[index]['info'],
+                  views: _data[index]['views'].toString(),
+                  date: _data[index]['create_time'].toString(),
+                )
+              ],
             );
           }
+
+          // Common ad
           return AdCard(
             title: _data[index]['type']['ru'],
             ad: _data[index]['ad'].toString(),

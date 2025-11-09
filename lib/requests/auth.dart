@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../globals.dart' as globals;
+import 'package:flutter/material.dart';
+import '../main.dart';
 
 
 class AuthService {
@@ -36,7 +38,7 @@ class AuthService {
   }
 
 
-  Future<void> logout() async {
+  Future<void> logout(context) async {
     final refresh = await storage.read(key: 'refresh');
     
     if (refresh != null) {
@@ -47,6 +49,11 @@ class AuthService {
     }
 
     await storage.deleteAll();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const MyHomePage()),
+      (route) => false,
+    );
   }
 
 
@@ -70,5 +77,10 @@ class AuthService {
     return false;
   }
 
+  Future<bool> isLoggedIn() async {
+    final access = await storage.read(key: 'access');
+    final refresh = await storage.read(key: 'refresh');
+    return access != null && refresh != null;
+  }
 
 }

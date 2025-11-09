@@ -1,14 +1,9 @@
 import 'dart:convert';
-import 'ad_view.dart';
 import 'package:flutter/material.dart';
 import 'package:korshiles_app/requests/api.dart';
 import 'package:korshiles_app/requests/auth.dart';
 import '../widgets/bar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'login_view.dart';
-import '../controllers/nav_controller.dart';
-import '../controllers/auth_controller.dart';
-import 'package:intl/intl.dart';
 import '../globals.dart' as globals;
 import 'my_ads_view.dart';
 
@@ -70,7 +65,7 @@ class _ProfileViewState extends State<ProfileView> {
               child: const Text('Удалить'),
               onPressed: () {
                 //ApiService().deleteAccount();
-                logout(context);
+                AuthService().logout(context);
                 Navigator.of(context).pop(); // Close the dialog
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Аккаунт удален')),
@@ -83,16 +78,10 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  void logout(BuildContext context) async {
-    await AuthService().logout();
-    AuthController.isLoggedIn = false;
-    navIndexNotifier.value = 0; // Switch to HomeView
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: ApiService().isLoggedIn(),
+      future: AuthService().isLoggedIn(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -114,7 +103,7 @@ class _ProfileViewState extends State<ProfileView> {
                         child: Container(
                           //margin: EdgeInsets.symmetric(horizontal: 10),
                           padding: EdgeInsets.symmetric(horizontal: 10),
-                          height: 40,
+                          height: 48,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
@@ -139,7 +128,7 @@ class _ProfileViewState extends State<ProfileView> {
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 10),
                   padding: EdgeInsets.symmetric(horizontal: 10),
-                  height: 40,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -182,7 +171,7 @@ class _ProfileViewState extends State<ProfileView> {
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 10),
                   padding: EdgeInsets.symmetric(horizontal: 10),
-                  height: 40,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -219,13 +208,13 @@ class _ProfileViewState extends State<ProfileView> {
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 10),
                   padding: EdgeInsets.symmetric(horizontal: 10),
-                  height: 40,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: InkWell(
-                    onTap: () => logout(context),
+                    onTap: () => AuthService().logout(context),
                     child: Row(
                       children: [
                         Expanded(

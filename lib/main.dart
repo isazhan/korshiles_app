@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:korshiles_app/requests/auth.dart';
 import 'views/home_view.dart';
 import 'views/create_view.dart';
 import 'views/profile_view.dart';
 import 'views/login_view.dart';
-import 'widgets/nav.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'controllers/nav_controller.dart';
-import 'controllers/auth_controller.dart';
+import 'globals.dart' as globals;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,39 +36,46 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  //int _selectedIndex = 0;
+  int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
+  final _screens = [
     HomeView(),
     CreateView(),
     ProfileView(),
   ];
 
+  void _onItemTapped(int index) async {
+    if (index != 0) {
+      final loggedIn = await AuthService().isLoggedIn();
+      if (!loggedIn) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginView()),
+        );
+        return;
+      }
+    }
+
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ValueListenableBuilder<int>(
-        valueListenable: navIndexNotifier,
-        builder: (_, index, __) => _screens[index],
-      ),
-      bottomNavigationBar: ValueListenableBuilder<int>(
-        valueListenable: navIndexNotifier,
-        builder: (_, index, __) {
-          return CustomBottomNav(
-            selectedIndex: index,
-            onItemTapped: (newIndex) {
-              if ((newIndex == 1 || newIndex == 2) && !AuthController.isLoggedIn) {
-                AuthController.pendingTabIndex = newIndex;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginView()),
-                );
-                return;
-              }
-              navIndexNotifier.value = newIndex;
-            },
-          );
-        },
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        backgroundColor: Colors.white,
+        selectedItemColor: globals.myColor,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главная'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Подать'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Кабинет'),
+        ],
       ),
     );
   }

@@ -1,13 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../requests/api.dart';
-import '../main.dart';
 import '../widgets/bar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../controllers/nav_controller.dart';
-import '../controllers/auth_controller.dart';
 import '../requests/auth.dart';
 import '../globals.dart' as globals;
 
@@ -79,23 +74,8 @@ class _LoginViewState extends State<LoginView> {
         });
         break;
       case 'login':
-        //await _secureStorage.write(key: 'access', value: response['access']);
-        //await _secureStorage.write(key: 'refresh', value: response['refresh']);
-        //final user = response['user'];
-        //await _secureStorage.write(key: 'user', value: jsonEncode(response['user']));
         if (!mounted) return;
-
-        AuthController.isLoggedIn = true;
-
-        int? targetTab = AuthController.pendingTabIndex;
-        AuthController.pendingTabIndex = null;
-
         Navigator.pop(context); // Close LoginView
-
-        if (targetTab != null) {
-          navIndexNotifier.value = targetTab;
-        }
-
         break;
       case 'password_wrong':
         setState(() => _error = 'Неверный пароль.');

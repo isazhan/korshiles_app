@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:korshiles_app/views/profile_view.dart';
 import '../widgets/bar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../controllers/nav_controller.dart';
 import '../requests/api.dart';
+import '../requests/auth.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
@@ -81,7 +82,11 @@ class _CreateViewState extends State<CreateView> {
         _error = null;
       });
 
-      navIndexNotifier.value = 2; // Switch to ProfileView
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileView()),
+        (route) => false,
+      );
 
     } else {
       setState(() {
@@ -103,7 +108,7 @@ class _CreateViewState extends State<CreateView> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: ApiService().isLoggedIn(),
+      future: AuthService().isLoggedIn(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
