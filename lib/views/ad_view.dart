@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
 import 'package:korshiles_app/requests/api.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'dart:convert';
 import '../globals.dart' as globals;
 import 'package:flutter/services.dart';
 
@@ -165,7 +164,7 @@ class AdView extends StatelessWidget {
 
                 ElevatedButton(
                   onPressed: () async {
-                    final Uri emailLaunchUri = Uri(
+                    Uri(
                       scheme: 'mailto',
                       path: 'bestlogin9696@gmail.com',
                       queryParameters: {

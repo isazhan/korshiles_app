@@ -34,7 +34,6 @@ class _CreateViewState extends State<CreateView> {
   String? _selectedCity;
   String? _selectedDistrict;
   String? _selectedAdType;
-  String _Address = '';
   
 
   @override
