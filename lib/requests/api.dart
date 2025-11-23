@@ -43,18 +43,5 @@ class ApiService {
       throw Exception('Failed to load data');
     }
   }
-  
-
-  Future<bool> isLoggedIn() async {
-    final accessToken = await storage.read(key: 'access');
-    if (accessToken == null) return false;
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/api_check_token'),
-      headers: {'Authorization': 'Bearer $accessToken'},
-    );
-
-    return response.statusCode == 200;
-  }
 
 }

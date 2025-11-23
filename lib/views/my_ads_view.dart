@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:korshiles_app/requests/api.dart';
 import '../widgets/bar.dart';
 import '../globals.dart' as globals;
-import '../widgets/ad_card.dart';
+import '../widgets/ad_card_my.dart';
 
 class MyAdsView extends StatefulWidget {
   final String? user;
@@ -72,7 +72,21 @@ class _MyAdsViewState extends State<MyAdsView> {
               )
             ]
           ),
-          
+
+          Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(              
+              color: Colors.blue.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              'Объявления автоматически удаляются через 7 дней',
+              style: TextStyle(
+                //color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+          ),          
 
           // Ads List
           Expanded(
@@ -83,7 +97,7 @@ class _MyAdsViewState extends State<MyAdsView> {
                     : ListView.builder(
                         itemCount: _data.length,
                         itemBuilder: (context, index) {
-                          return AdCard(
+                          return AdCardMy(
                             title: _data[index]['type']['ru'],
                             ad: _data[index]['ad'].toString(),
                             photos: (_data[index]['photos'] != null)
@@ -96,6 +110,7 @@ class _MyAdsViewState extends State<MyAdsView> {
                             description: _data[index]['info'],
                             views: _data[index]['views'].toString(),
                             date: _data[index]['create_time'].toString(),
+                            publish: _data[index]['publish'],
                           );
                         },
                       ),

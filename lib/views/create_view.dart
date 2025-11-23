@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:korshiles_app/views/profile_view.dart';
+import 'package:korshiles_app/views/my_ads_view.dart';
 import '../widgets/bar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../requests/api.dart';
@@ -7,10 +7,13 @@ import '../requests/auth.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
+import '../globals.dart' as globals;
 
 
 class CreateView extends StatefulWidget {
-  const CreateView({super.key});
+  final VoidCallback? onSuccess;
+
+  const CreateView({super.key, this.onSuccess});
 
   @override
   State<CreateView> createState() => _CreateViewState();
@@ -67,6 +70,15 @@ class _CreateViewState extends State<CreateView> {
       _error = null;
     });
 
+    final phone = _contactController.text.trim();
+    if (phone.length != 10) {
+      setState(() {
+        _loading = false;
+        _error = 'Номер телефона должен содержать 10 цифр.';
+      });
+      return;
+    }
+
     final response = await ApiService().postWithAuth('api/api_create_ad', {
       'type': _selectedAdType ?? '',
       'city': _selectedCity ?? '',
@@ -82,11 +94,23 @@ class _CreateViewState extends State<CreateView> {
         _error = null;
       });
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const ProfileView()),
-        (route) => false,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Объявление успешно создано'),
+          backgroundColor: Colors.green,
+        ),
       );
+
+      widget.onSuccess?.call(); //go to profile tab
+
+      final username = await AuthService().loadUserName();
+
+      Future.microtask(() {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => MyAdsView(user: username,)),
+        );
+      });
+      return;
 
     } else {
       setState(() {
@@ -117,6 +141,7 @@ class _CreateViewState extends State<CreateView> {
         if (snapshot.hasData && snapshot.data == true) {
           return Scaffold(
             appBar: CustomAppBar(),
+            backgroundColor: globals.myBackColor,
             body: Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListView(
@@ -157,7 +182,10 @@ class _CreateViewState extends State<CreateView> {
                             ? 'Пожалуйста, выберите тип объявления'
                             : null,
                         decoration:
-                            const InputDecoration(labelText: 'Тип объявления'),
+                            const InputDecoration(
+                              labelText: 'Тип объявления',
+                              border: InputBorder.none,
+                            ),
                         items: _adTypes
                           .map((ad) => DropdownMenuItem<String>(
                                 value: ad['id'],
@@ -186,7 +214,10 @@ class _CreateViewState extends State<CreateView> {
                         name: 'city',
                         initialValue: _selectedCity,
                         decoration:
-                            const InputDecoration(labelText: 'Город'),
+                            const InputDecoration(
+                              labelText: 'Город',
+                              border: InputBorder.none,
+                            ),
                         items: _cities
                           .map((city) => DropdownMenuItem<String>(
                                 value: city['id'],
@@ -211,7 +242,10 @@ class _CreateViewState extends State<CreateView> {
                         initialValue: _selectedDistrict,
                         name: 'district',
                         decoration:
-                            const InputDecoration(labelText: 'Район'),
+                            const InputDecoration(
+                              labelText: 'Район',
+                              border: InputBorder.none,
+                            ),
                         items: _districts
                           .map((district) => DropdownMenuItem<String>(
                                 value: district['id'],
@@ -235,7 +269,10 @@ class _CreateViewState extends State<CreateView> {
                     ),
                     child: TextFormField(
                       controller: _addressController,
-                      decoration: const InputDecoration(labelText: 'Адрес'),
+                      decoration: const InputDecoration(
+                        labelText: 'Адрес',
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
                   Container(
@@ -248,7 +285,10 @@ class _CreateViewState extends State<CreateView> {
                     child: TextFormField(
                       controller: _descriptionController,
                       maxLines: 4,
-                      decoration: const InputDecoration(labelText: 'Описание'),
+                      decoration: const InputDecoration(
+                        labelText: 'Описание',
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
                   Container(
@@ -266,9 +306,14 @@ class _CreateViewState extends State<CreateView> {
                         labelText: 'Контакты',
                         prefixText: '+7',
                         counterText: '',
+                        border: InputBorder.none,
                       ),
                     ),
                   ),
+
+                  if (_error != null)
+                    Text(_error!, style: const TextStyle(color: Colors.red)),
+
                   Container(
                     margin: EdgeInsets.only(top: 10),
                     child: ElevatedButton(

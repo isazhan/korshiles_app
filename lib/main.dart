@@ -38,11 +38,24 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
-  final _screens = [
-    HomeView(),
-    CreateView(),
-    ProfileView(),
-  ];
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _screens = [
+      HomeView(),
+      CreateView(onSuccess: goToProfile),
+      ProfileView(),
+    ];
+  }
+
+  void goToProfile() {
+    setState(() {
+      _selectedIndex = 2;
+    });
+  }
 
   void _onItemTapped(int index) async {
     if (index != 0) {

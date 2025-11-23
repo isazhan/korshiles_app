@@ -9,10 +9,9 @@ import '../main.dart';
 class AuthService {
   final baseUrl = globals.host;
   final storage = const FlutterSecureStorage();
-  //AuthService(this.baseUrl);
 
 
-  Future<Map<String, dynamic>> login(phonenumber, code, password, newpassword) async {
+  Future<Map<String, dynamic>> login(phonenumber, code, password, newpassword, forget) async {
     final url = Uri.parse('$baseUrl/api/api_login');
     final resp = await http.post(url,
       headers: {'Content-Type': 'application/json'},
@@ -21,6 +20,7 @@ class AuthService {
         'code': code,
         'password': password,
         'password_new': newpassword,
+        'forget': forget,
       })
     );
 
@@ -57,30 +57,53 @@ class AuthService {
   }
 
 
-  Future<bool> refreshToken() async {
-    final refresh = await storage.read(key: 'refresh');
-    if (refresh == null) return false;
-
-    final url = Uri.parse('$baseUrl/api/api_refresh_token');
-    final resp = await http.post(url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refresh': refresh}));
-
-    if (resp.statusCode == 200) {
-      final data = jsonDecode(resp.body);
-      await storage.write(key: 'access', value: data['access']);
-      if (data.containsKey('refresh')) {
-        await storage.write(key: 'refresh', value: data['refresh']);
-      }
-      return true;
-    }
-    return false;
-  }
-
   Future<bool> isLoggedIn() async {
     final access = await storage.read(key: 'access');
     final refresh = await storage.read(key: 'refresh');
-    return access != null && refresh != null;
+    
+    // Simple check: both tokens must be present
+    if (access == null || refresh == null) {
+      return false;
+    }
+
+    // Check if access token is expired on server
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/api_check_token'),
+      headers: {'Authorization': 'Bearer $access'},
+    );
+
+    // If access token is valid, return true
+    if (response.statusCode == 200) {
+      return true;
+    }
+
+    // If access token is invalid, try to refresh it
+    final refreshResponse = await http.post(
+      Uri.parse('$baseUrl/api/api/token/refresh/'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh': refresh}),
+    );
+
+    if (refreshResponse.statusCode == 200) {
+      final data = jsonDecode(refreshResponse.body);
+
+      // Getting new access token
+      await storage.write(key: 'access', value: data['access']);
+
+      return true;
+    }
+
+    // If refresh token is also invalid, return false
+    await storage.delete(key: 'access');
+    await storage.delete(key: 'refresh');
+    return false;
+  }
+
+
+  Future<String> loadUserName() async {
+    final userJson = await storage.read(key: 'user');    
+    final user = jsonDecode(userJson!);
+    return user['phone_number'];    
   }
 
 }

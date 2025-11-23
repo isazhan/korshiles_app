@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../widgets/bar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,18 +18,20 @@ class _LoginViewState extends State<LoginView> {
   final _passwordController = TextEditingController();
   final _newPasswordController = TextEditingController();
 
-  final _secureStorage = const FlutterSecureStorage();
 
   bool _showCodeField = false;
   bool _showPasswordField = false;
   bool _showNewPasswordField = false;
   bool _loading = false;
   String? _error;
+  String forget = '';
+  bool _isReadOnlyPhone = false;
 
   Future<void> _login() async {
     setState(() {
       _loading = true;
       _error = null;
+      _isReadOnlyPhone = true;
     });
 
     final phone = _phoneController.text.trim();
@@ -47,6 +48,7 @@ class _LoginViewState extends State<LoginView> {
       _codeController.text.trim(),
       _passwordController.text.trim(),
       _newPasswordController.text.trim(),
+      forget,
     );
 
     setState(() => _loading = false);
@@ -83,9 +85,25 @@ class _LoginViewState extends State<LoginView> {
       case 'code_wrong':
         setState(() => _error = 'Неверный код верификации.');
         break;
+      case 'new_code_sent':
+        setState(() {
+          _passwordController.clear();
+          _showPasswordField = false;
+          _showCodeField = true;
+          forget = '';
+        });
+        break;
       default:
         setState(() => _error = 'Ошибка входа. Попробуйте снова.');
     }
+  }
+
+  Future<void> _forgetPassword() async {
+    setState(() {
+      forget = 'true';
+    });
+
+    _login();
   }
 
   @override
@@ -130,6 +148,7 @@ class _LoginViewState extends State<LoginView> {
                   controller: _phoneController,
                   keyboardType: TextInputType.number,
                   maxLength: 10,
+                  readOnly: _isReadOnlyPhone,
                   decoration: const InputDecoration(
                     labelText: 'Номер телефона',
                     prefixText: '+7',
@@ -165,7 +184,7 @@ class _LoginViewState extends State<LoginView> {
               ),
             if (_showPasswordField)
               Container(
-                margin: EdgeInsets.only(top: 10),
+                margin: EdgeInsets.only(top: 10, bottom: 10),
                 padding: EdgeInsets.only(left: 10),
                 //height: 40,
                 decoration: BoxDecoration(
@@ -176,7 +195,7 @@ class _LoginViewState extends State<LoginView> {
                   alignment: Alignment.centerLeft,
                   child: TextField(
                     controller: _passwordController,
-                    //keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.text,
                     obscureText: true,
                     decoration: const InputDecoration(
                       labelText: 'Пароль',
@@ -186,6 +205,20 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
                 ), 
+              ),
+            if (_showPasswordField)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: globals.myColor,
+                  side: BorderSide(width: 1.0, color: globals.myColor),
+                  fixedSize: const Size.fromHeight(40),
+                  //fixedSize: Size(50, 50),
+                ),
+                onPressed: _loading ? null : _forgetPassword,
+                child: _loading
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
+                    : const Text('Забыли пароль?'),
               ),
             if (_showNewPasswordField)
               Container(
@@ -266,8 +299,9 @@ class _LoginViewState extends State<LoginView> {
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromRGBO(22, 151, 209, 1),
+                backgroundColor: globals.myColor,
                 foregroundColor: Colors.white,
+                fixedSize: const Size.fromHeight(40),
               ),
               onPressed: _loading ? null : _login,
               child: _loading

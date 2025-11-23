@@ -17,33 +17,18 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   final storage = const FlutterSecureStorage();
   String? _userName;
-  List<dynamic> _data = [];
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
-  }
-  
-  Future<void> _loadUserName() async {
-    final userJson = await storage.read(key: 'user');
-    
-    if (userJson != null) {
-      final user = jsonDecode(userJson);
-      setState(() {
-        _userName = user['phone_number']; // Adjust based on your actual user field
-      });
-      await _loadMyAds();
-    }
+    _loadData();
   }
 
-  Future<void> _loadMyAds() async {
-    final response = await ApiService().justGet('api/api_my_ads', {'phone_number': _userName});
-    if (response != null) {
-      setState(() {
-        _data = response['ads'] ?? [];
-      });
-    }
+  Future<void> _loadData() async {
+    final user = await AuthService().loadUserName();
+    setState(() {
+      _userName = user;
+    });
   }
 
   Future<void> _showConfirmationDialog(BuildContext context) async {
@@ -123,118 +108,59 @@ class _ProfileViewState extends State<ProfileView> {
                     ],
                   ),
                 ),
-
-                // My ads
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MyAdsView(user: _userName,)),
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.list, color: globals.myColor, size: 16),
-                              SizedBox(width: 10),
-                              Text(
-                                'Мои объявления',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
+                
+                
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    children: [
+                      // My ads
+                      ListTile(
+                        leading: Icon(Icons.list, color: globals.myColor,),
+                        title: Text('Мои объявления'),
+                        trailing: Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MyAdsView(user: _userName,)),
+                          );
+                        },
+                        tileColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
 
-
-                SizedBox(height: 10),
-
-
-                // Delete account
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      _showConfirmationDialog(context);
-                    },
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: globals.myColor, size: 16),
-                              SizedBox(width: 10),
-                              Text(
-                                'Удалить аккаунт',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
+                      SizedBox(height: 10,),
+                      // Delete account
+                      ListTile(
+                        leading: Icon(Icons.delete, color: Colors.red,),
+                        title: Text('Удалить аккаунт'),
+                        trailing: Icon(Icons.chevron_right),
+                        onTap: () {
+                          _showConfirmationDialog(context);
+                        },
+                        tileColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-
-
-                // Logout
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: InkWell(
-                    onTap: () => AuthService().logout(context),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.logout, color: globals.myColor, size: 16),
-                              SizedBox(width: 10),
-                              Text(
-                                'Выйти',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
+                      ),
+                      
+                      SizedBox(height: 10,),
+                      // Logout
+                      ListTile(
+                        leading: Icon(Icons.logout, color: Colors.red,),
+                        title: Text('Выйти'),
+                        trailing: Icon(Icons.chevron_right),
+                        onTap: () {
+                          AuthService().logout(context);
+                        },
+                        tileColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
