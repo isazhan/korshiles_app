@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="facebook_app_id">1076147714544380</string>
+  <string name="facebook_client_token">38d1c318488878607657281a16b0cefe</string>
+  <string name="fb_login_protocol_scheme">fb1076147714544380</string>
+  <string name="app_name">Korshiles</string>
+</resources>

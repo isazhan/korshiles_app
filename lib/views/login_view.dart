@@ -21,7 +21,9 @@ class _LoginViewState extends State<LoginView> {
 
   bool _showCodeField = false;
   bool _showPasswordField = false;
+  bool _passwordVisible = true;
   bool _showNewPasswordField = false;
+  bool _newPasswordVisible = true;
   bool _loading = false;
   String? _error;
   String forget = '';
@@ -196,12 +198,22 @@ class _LoginViewState extends State<LoginView> {
                   child: TextField(
                     controller: _passwordController,
                     keyboardType: TextInputType.text,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _passwordVisible,
+                    decoration: InputDecoration(
                       labelText: 'Пароль',
                       //prefixText: '+7',
                       border: InputBorder.none,
                       //counterText: '',
+                      suffixIcon: IconButton(
+                        icon: Icon(_passwordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                        )
                     ),
                   ),
                 ), 
@@ -234,12 +246,22 @@ class _LoginViewState extends State<LoginView> {
                   child: TextField(
                     controller: _newPasswordController,
                     //keyboardType: TextInputType.number,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _newPasswordVisible,
+                    decoration: InputDecoration(
                       labelText: 'Придумайте пароль',
                       //prefixText: '+7',
                       border: InputBorder.none,
                       //counterText: '',
+                      suffixIcon: IconButton(
+                        icon: Icon(_newPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _newPasswordVisible = !_newPasswordVisible;
+                          });
+                        },
+                        )
                     ),
                   ),
                 ), 
@@ -254,47 +276,37 @@ class _LoginViewState extends State<LoginView> {
                 //color: Color.fromRGBO(207, 226, 255, 1),
                 //borderRadius: BorderRadius.circular(10),
               //),
-              child: Center(
-                //alignment: Alignment.center,
-                child: RichText(
-                  text: TextSpan(
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: 'Продолжая вы принимаете ',
-                        style: TextStyle(
-                          fontSize: 14,
-                          //fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'Продолжая вы принимаете \n',
+                      style: TextStyle(
+                        fontSize: 14,
+                        //fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
-                      TextSpan(
-                        text: 'Пользовательское соглашение',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async{
-                            final Uri url = Uri(scheme: 'https', host: 'korshiles.kz', path: 'terms');
-                            print(url.toString());
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url);
-                            } else {
-                              throw 'Could not launch $url';
-                            }
+                    ),
+                    TextSpan(
+                      text: 'Пользовательское соглашение',
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async{
+                          final Uri url = Uri(scheme: 'https', host: 'korshiles.kz', path: 'terms');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            throw 'Could not launch $url';
                           }
-                      ),
-                      /*TextSpan(
-                        text: 'Так мы сможем отправить вам код верификации.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
-                      ),*/
-                    ],
-                  )
-                ),
-              ), 
+                        }
+                    ),
+                  ],
+                )
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

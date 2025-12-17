@@ -4,6 +4,7 @@ import 'package:korshiles_app/requests/api.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../globals.dart' as globals;
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AdView extends StatelessWidget {
   final String ad;
@@ -62,7 +63,7 @@ class AdView extends StatelessWidget {
                       );
                     }).toList(),
                     options: CarouselOptions(
-                      height: 200.0,
+                      height: 300.0,
                       enlargeCenterPage: true,
                       autoPlay: true,
                       enableInfiniteScroll: false
@@ -143,6 +144,26 @@ class AdView extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async{
+                          final Uri url = Uri(scheme: 'https', host: 'wa.me', path: contact);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                      icon: const Icon(Icons.phone, color: Colors.white),
+                      label: const Text('Написать в WhatsApp', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 37, 211, 102),
+                      ),
+                    ),
+                  ],
+                ),                
                 
                 const SizedBox(height: 16),
 
