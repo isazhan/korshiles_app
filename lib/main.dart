@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:korshiles_app/requests/auth.dart';
 import 'views/home_view.dart';
 import 'views/create_view.dart';
@@ -15,13 +16,40 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  static _MyAppState of(BuildContext context) =>
+      context.findAncestorStateOfType<_MyAppState>()!;
+
+  @override
+  State<MyApp> createState() => _MyAppState(); 
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale _locale = const Locale('kk');
+
+  void changeLanguage(String lang) {
+    setState(() {
+      _locale = Locale(lang);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Korshiles',
+      locale: _locale,
+      supportedLocales: const [
+        Locale('kk'),
+        Locale('ru'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(),
     );
@@ -77,6 +105,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -84,10 +114,10 @@ class _MyHomePageState extends State<MyHomePage> {
         onTap: _onItemTapped,
         backgroundColor: Colors.white,
         selectedItemColor: globals.myColor,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главная'),
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Подать'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Кабинет'),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: lang == 'kk' ? 'Басты' : 'Главная'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: lang == 'kk' ? 'Жариялау' : 'Подать'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: lang == 'kk' ? 'Профиль' : 'Профиль'),
         ],
       ),
     );

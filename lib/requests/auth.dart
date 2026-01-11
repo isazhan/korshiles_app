@@ -79,7 +79,7 @@ class AuthService {
 
     // If access token is invalid, try to refresh it
     final refreshResponse = await http.post(
-      Uri.parse('$baseUrl/api/api/token/refresh/'),
+      Uri.parse('$baseUrl/api/api_refresh_token'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'refresh': refresh}),
     );
@@ -104,6 +104,12 @@ class AuthService {
     final userJson = await storage.read(key: 'user');    
     final user = jsonDecode(userJson!);
     return user['phone_number'];    
+  }
+
+  Future<bool> loadStaff() async {
+    final userJson = await storage.read(key: 'user');    
+    final user = jsonDecode(userJson!);
+    return user['is_staff'];
   }
 
 }

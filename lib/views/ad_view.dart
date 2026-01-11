@@ -13,6 +13,8 @@ class AdView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       appBar: CustomAppBar(),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -26,7 +28,7 @@ class AdView extends StatelessWidget {
             return const Center(child: Text('No data available.'));
           } else {
             final data = snapshot.data!;
-            final title = data['type']['ru'] as String? ?? 'No Title';
+            final title = data['type'][lang] as String? ?? 'No Title';
             final images = (data['photos'] as List?)?.cast<String>() ?? [];
             final city = data['city']['ru'] as String? ?? 'No city';
             final district = (data['district'] != '')
@@ -74,8 +76,9 @@ class AdView extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // city
-                Text(
-                  'Город',
+                Text(lang=='kk'
+                  ? 'Қала'
+                  : 'Город',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -89,8 +92,9 @@ class AdView extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // district
-                Text(
-                  'Район',
+                Text(lang=='kk'
+                  ? 'Аудан'
+                  : 'Район',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -104,8 +108,9 @@ class AdView extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // address
-                Text(
-                  'Адрес',
+                Text(lang=='kk'
+                  ? 'Мекенжай'
+                  : 'Адрес',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -119,8 +124,9 @@ class AdView extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // contact
-                Text(
-                  'Контакты',
+                Text(lang=='kk'
+                  ? 'Байланыс'
+                  : 'Контакты',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -138,7 +144,7 @@ class AdView extends StatelessWidget {
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: '+'+contact));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Контакт скопирован в буфер обмена')),
+                          SnackBar(content: Text(lang=='kk' ? 'Байланыс номері көшірілді' : 'Контакт скопирован в буфер обмена')),
                         );
                       },
                     ),
@@ -157,7 +163,7 @@ class AdView extends StatelessWidget {
                           }
                         },
                       icon: const Icon(Icons.phone, color: Colors.white),
-                      label: const Text('Написать в WhatsApp', style: TextStyle(color: Colors.white)),
+                      label: Text(lang=='kk' ? 'WhatsApp-қа жазу' : 'Написать в WhatsApp', style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 37, 211, 102),
                       ),
@@ -168,8 +174,9 @@ class AdView extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Description
-                Text(
-                  'Описание',
+                Text(lang=='kk'
+                  ? 'Сипаттама'
+                  : 'Описание',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -194,11 +201,11 @@ class AdView extends StatelessWidget {
                       }
                     );
                   },
-                  child: const Text('Пожаловаться на объявление'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     foregroundColor: Colors.redAccent,
                   ),
+                  child: Text(lang=='kk' ? 'Хабарландыруға шағымдану' : 'Пожаловаться на объявление'),
                 )
               ],
             );

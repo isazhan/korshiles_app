@@ -40,6 +40,8 @@ class _MyAdsViewState extends State<MyAdsView> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    
     return Scaffold(
       appBar: CustomAppBar(),
       backgroundColor: globals.myBackColor,
@@ -61,7 +63,7 @@ class _MyAdsViewState extends State<MyAdsView> {
                   child: Align(
                     alignment: Alignment.center,
                     child: Text(
-                      'Мои объявления',
+                      lang=='kk' ? 'Менің хабарландыруларым' : 'Мои объявления',
                       style: TextStyle(
                         fontSize: 18, 
                         fontWeight: FontWeight.w600,
@@ -74,13 +76,15 @@ class _MyAdsViewState extends State<MyAdsView> {
           ),
 
           Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
             padding: EdgeInsets.all(10),
             decoration: BoxDecoration(              
               color: Colors.blue.shade200,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(
-              'Объявления автоматически удаляются через 7 дней',
+            child: Text(lang=='kk'
+              ? 'Хабарландырулар 30 күннен кейін автоматты түрде жойылады'
+              : 'Объявления автоматически удаляются через 30 дней',
               style: TextStyle(
                 //color: Colors.white,
                 fontSize: 14,
@@ -93,7 +97,7 @@ class _MyAdsViewState extends State<MyAdsView> {
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
                 : _data.isEmpty
-                    ? Center(child: Text('У вас нет объявлений.'))
+                    ? Center(child: Text(lang=='kk' ? 'Сізде хабарландырулар жоқ' : 'У вас нет объявлений'))
                     : ListView.builder(
                         itemCount: _data.length,
                         itemBuilder: (context, index) {

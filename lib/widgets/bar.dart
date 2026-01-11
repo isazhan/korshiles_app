@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../globals.dart' as globals;
+import 'package:korshiles_app/main.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool exit;
@@ -33,7 +35,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      backgroundColor: Color.fromRGBO(22, 151, 209, 1),
+      actions: [
+        PopupMenuButton(
+          icon: Icon(Icons.language, color: Colors.white),
+          iconSize: 30,
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem(
+              child: Text('Қазақша'),
+              //value: 'kz',
+              onTap: () {
+                MyApp.of(context).changeLanguage('kk');
+              },
+            ),
+            PopupMenuItem(
+              child: Text('Русский'),
+              //value: 'ru',
+              onTap: () {
+                MyApp.of(context).changeLanguage('ru');
+              },
+            ),
+          ],
+        )
+      ],
+      backgroundColor: globals.myColor,
     );
   }
 

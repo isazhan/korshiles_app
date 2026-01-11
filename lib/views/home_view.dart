@@ -126,6 +126,8 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       appBar: CustomAppBar(),
       backgroundColor: Color.fromRGBO(240, 240, 240, 1),
@@ -152,7 +154,9 @@ class _HomeViewState extends State<HomeView> {
                   ),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(totalAds.toString() + ' объявления',
+                    child: Text(lang=='kk'
+                        ? totalAds.toString() + ' хабарландыру'
+                        : totalAds.toString() + ' объявлений',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -224,7 +228,7 @@ class _HomeViewState extends State<HomeView> {
 
                 // Ad
                 AdCard(
-                  title: _data[index]['type']['ru'],
+                  title: _data[index]['type'][lang],
                   ad: _data[index]['ad'].toString(),
                   photos: (_data[index]['photos'] != null)
                       ? globals.host + _data[index]['photos'][0]
@@ -243,7 +247,7 @@ class _HomeViewState extends State<HomeView> {
 
           // Common ad
           return AdCard(
-            title: _data[index]['type']['ru'],
+            title: _data[index]['type'][lang],
             ad: _data[index]['ad'].toString(),
             photos: (_data[index]['photos'] != null)
                 ? globals.host + _data[index]['photos'][0]

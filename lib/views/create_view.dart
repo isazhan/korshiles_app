@@ -1,13 +1,18 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:korshiles_app/views/my_ads_view.dart';
-import '../widgets/bar.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../globals.dart' as globals;
 import '../requests/api.dart';
 import '../requests/auth.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
-import '../globals.dart' as globals;
+import '../widgets/bar.dart';
+import 'my_ads_view.dart';
 
 
 class CreateView extends StatefulWidget {
@@ -21,24 +26,28 @@ class CreateView extends StatefulWidget {
 
 class _CreateViewState extends State<CreateView> {
   final FlutterSecureStorage storage = FlutterSecureStorage();
+  final _formKey = GlobalKey<FormBuilderState>();
+
   bool _loading = false;
   String? _error;
-  final _adtest = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _contactController = TextEditingController();
 
   List<dynamic> _cities = [];
   List<dynamic> _districts = [];
   List<dynamic> _adTypes = [];
-  String? _selectedCity;
-  String? _selectedDistrict;
-  String? _selectedAdType;
+
+  late Future<bool> _isLoggedInFuture;
+
+  // Image picker
+  final ImagePicker _picker = ImagePicker();
+  List<XFile> _images = [];
+  static const int maxImages = 5;
+
   
 
   @override
   void initState() {
     super.initState();
+    _isLoggedInFuture = AuthService().isLoggedIn();
     loadJson();
   }
 
@@ -48,54 +57,71 @@ class _CreateViewState extends State<CreateView> {
     final data = json.decode(jsonString);
 
     setState(() {
-      _cities = data['cities'];
-      _adTypes = data['ad_types'];
+      _cities = data['cities'] ?? [];
+      _adTypes = data['ad_types'] ?? [];
     });
   }
 
   void _onCitySelected(String? value) {
+    if (value == null) return;
+
+    final city = _cities.firstWhere(
+      (c) => c['id'] == value,
+      orElse: () => null,
+    );
+
+    if (city == null) return;
+
     setState(() {
-      _selectedCity = value;
-      _districts = _cities
-          .firstWhere((city) => city['id'] == value)['districts'];
-      _selectedDistrict = null;
-      //_Address = value!;
+      _districts = city['districts'] ?? [];
+    });
+
+    _formKey.currentState?.fields['district']?.reset();
+  }
+
+
+  Future<void> _pickImages() async {
+    final picked = await _picker.pickMultiImage(
+      imageQuality: 80,
+    );
+
+    if (picked.isEmpty) return;
+
+    setState(() {
+      final remaining = maxImages - _images.length;
+      _images.addAll(picked.take(remaining));
     });
   }
 
+
   Future<void> _createAd() async {
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.saveAndValidate()) return;
+
     setState(() {
       _loading = true;
       _error = null;
     });
 
-    final phone = _contactController.text.trim();
-    if (phone.length != 10) {
-      setState(() {
-        _loading = false;
-        _error = 'Номер телефона должен содержать 10 цифр.';
-      });
-      return;
-    }
+    final values = formState.value;
 
-    final response = await ApiService().postWithAuth('api/api_create_ad', {
-      'type': _selectedAdType ?? '',
-      'city': _selectedCity ?? '',
-      'district': _selectedDistrict ?? '',
-      'address': _addressController.text,
-      'info': _descriptionController.text,
-      'contact': _contactController.text,
-    });
+    final response = await ApiService().postMultipartWithAuth('api/api_create_ad', {
+      'type': values['type'],
+      'city': values['city'],
+      'district': values['district'],
+      'address': values['address'],
+      'info': values['description'],
+      'contact': '7${values['contact']}',
+    },
+      _images
+    );
+
+    setState(() => _loading = false);
 
     if (response['status'] == 'ok') {
-      setState(() {
-        _loading = false;
-        _error = null;
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Объявление успешно создано'),
+          content: Text('Хабарландыру сәтті берілді!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -104,48 +130,45 @@ class _CreateViewState extends State<CreateView> {
 
       final username = await AuthService().loadUserName();
 
-      Future.microtask(() {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => MyAdsView(user: username,)),
-        );
-      });
-      return;
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => MyAdsView(user: username,)),
+      );
 
     } else {
       setState(() {
-        _loading = false;
         _error = response['status'] ?? 'Произошла ошибка';
       });
     }
   }
 
-  @override
-  void dispose() {
-    _addressController.dispose();
-    _descriptionController.dispose();
-    _contactController.dispose();
-    _adtest.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    
     return FutureBuilder<bool>(
-      future: AuthService().isLoggedIn(),
+      future: _isLoggedInFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasData && snapshot.data == true) {
-          return Scaffold(
-            appBar: CustomAppBar(),
-            backgroundColor: globals.myBackColor,
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
+        if (snapshot.data != true) {
+          return const SizedBox();
+        }
+
+        return Scaffold(
+          appBar: CustomAppBar(),
+          backgroundColor: globals.myBackColor,
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: FormBuilder(
+              key: _formKey,
               child: ListView(
-                shrinkWrap: true,
+              //shrinkWrap: true,
                 children: [
+
+                  // Tittle
                   Container(
                     //margin: EdgeInsets.only(right: 10),
                     padding: EdgeInsets.only(left: 10),
@@ -156,7 +179,7 @@ class _CreateViewState extends State<CreateView> {
                     ),
                     child: Align(
                       alignment: Alignment.center,
-                      child: Text('Подать объявление',
+                      child: Text(lang=='kk' ? 'Хабарландыру беру' : 'Подать объявление',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -164,177 +187,251 @@ class _CreateViewState extends State<CreateView> {
                       ),
                     ), 
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.only(left: 10),
-                    //height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FormBuilderDropdown(
-                        name: 'type',
-                        initialValue: _selectedAdType,
-                        validator: (value) => value == null
-                            ? 'Пожалуйста, выберите тип объявления'
-                            : null,
-                        decoration:
-                            const InputDecoration(
-                              labelText: 'Тип объявления',
-                              border: InputBorder.none,
-                            ),
-                        items: _adTypes
-                          .map((ad) => DropdownMenuItem<String>(
-                                value: ad['id'],
-                                child: Text(ad['ru']),
-                              ))
-                          .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedAdType = value;
-                          });
-                        },
+
+                  // Ad type
+                  _dropdown(
+                    child: FormBuilderDropdown<String>(
+                      name: 'type',
+                      validator: FormBuilderValidators.required(
+                        errorText: lang == 'kk'
+                            ? 'Хабарландыру түрін таңдаңыз'
+                            : 'Выберите тип объявления',
                       ),
-                    ), 
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.only(left: 10),
-                    //height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FormBuilderDropdown(
-                        name: 'city',
-                        initialValue: _selectedCity,
-                        decoration:
-                            const InputDecoration(
-                              labelText: 'Город',
-                              border: InputBorder.none,
-                            ),
-                        items: _cities
-                          .map((city) => DropdownMenuItem<String>(
-                                value: city['id'],
-                                child: Text(city['ru']),
-                              ))
-                          .toList(),
-                        onChanged: _onCitySelected,
+                      decoration: InputDecoration(
+                        labelText: lang=='kk' ? 'Хабарландыру түрі' : 'Тип объявления',
+                        border: InputBorder.none,
                       ),
-                    ), 
+                      items: _adTypes
+                        .map((ad) => DropdownMenuItem<String>(
+                              value: ad['id'],
+                              child: Text(ad[lang]),
+                            ))
+                        .toList(),
+                    )
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.only(left: 10),
-                    //height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FormBuilderDropdown(
-                        initialValue: _selectedDistrict,
-                        name: 'district',
-                        decoration:
-                            const InputDecoration(
-                              labelText: 'Район',
-                              border: InputBorder.none,
-                            ),
-                        items: _districts
-                          .map((district) => DropdownMenuItem<String>(
-                                value: district['id'],
-                                child: Text(district['ru']),
-                              ))
-                          .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedDistrict = value;
-                          });
-                        },
+
+                  // City
+                  _dropdown(
+                    child: FormBuilderDropdown<String>(
+                      name: 'city',
+                      validator: FormBuilderValidators.required(
+                        errorText: lang == 'kk'
+                            ? 'Қаланы таңдаңыз'
+                            : 'Выберите город',
                       ),
-                    ), 
+                      decoration: InputDecoration(
+                        labelText: lang=='kk' ? 'Қала' : 'Город',
+                        border: InputBorder.none,
+                      ),
+                      items: _cities
+                        .map((city) => DropdownMenuItem<String>(
+                              value: city['id'],
+                              child: Text(city[lang]),
+                            ))
+                        .toList(),
+                      onChanged: _onCitySelected,
+                    )
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextFormField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Адрес',
+
+                  // District
+                  _dropdown(
+                    child: FormBuilderDropdown<String>(
+                      name: 'district',                      
+                      decoration: InputDecoration(
+                        labelText: lang=='kk' ? 'Аудан' : 'Район',
+                        border: InputBorder.none,
+                      ),
+                      items: _districts
+                        .map((district) => DropdownMenuItem<String>(
+                              value: district['id'],
+                              child: Text(district[lang]),
+                            ))
+                        .toList(),
+                    )
+                  ),
+
+                  // Address
+                  _input(
+                    child: FormBuilderTextField(
+                      name: 'address',
+                      decoration: InputDecoration(
+                        labelText: lang=='kk' ? 'Мекен-жай' : 'Адрес',
                         border: InputBorder.none,
                       ),
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextFormField(
-                      controller: _descriptionController,
+
+                  // Description                  
+                  _input(
+                    child: FormBuilderTextField(
+                      name: 'description',
+                      validator: FormBuilderValidators.required(
+                        errorText: lang == 'kk'
+                            ? 'Сипаттама жазылуы тиіс'
+                            : 'Напишите описание',
+                      ),
                       maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: 'Описание',
+                      decoration: InputDecoration(
+                        labelText: lang=='kk' ? 'Сипаттама' : 'Описание',
                         border: InputBorder.none,
                       ),
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextFormField(
+
+                  // Contact
+                  _input(
+                    child: FormBuilderTextField(
+                      name: 'contact',
                       maxLength: 10,
                       keyboardType: TextInputType.number,
-                      controller: _contactController,
-                      decoration: const InputDecoration(
-                        labelText: 'Контакты',
+                      decoration: InputDecoration(
+                        labelText: lang=='kk' ? 'Байланыс' : 'Контакты',
                         prefixText: '+7',
                         counterText: '',
                         border: InputBorder.none,
                       ),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.numeric(),
+                        FormBuilderValidators.equalLength(
+                          10,
+                          errorText: lang=='kk' ? 'Номер толық жазылмаған' : 'Номер введен не полностью',
+                        ),
+                      ]),
                     ),
                   ),
+
+                  _imagesPicker(),
+
+                  const SizedBox(height: 10),                
 
                   if (_error != null)
                     Text(_error!, style: const TextStyle(color: Colors.red)),
 
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _createAd,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(22, 151, 209, 1),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: _loading
-                          ? const CircularProgressIndicator()
-                          : const Text('Подать объявление'),
-                    )
+                  const SizedBox(height: 10),
+
+                  ElevatedButton(
+                    onPressed: _loading ? null : _createAd,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: globals.myColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: _loading
+                        ? const CircularProgressIndicator()
+                        : Text(lang=='kk' ? 'Хабарландыру беру' : 'Подать объявление'),
                   ),
+
                 ],
               ),
             ),
-          );
-        } else {
-          
-          return const SizedBox(); // placeholder
-        }
+          )
+        );
       },
     );
   }
+
+  // Common dropdown container
+  Widget _dropdown({required Widget child}) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: child,
+    );
+  }
+
+  // Common input container
+  Widget _input({required Widget child}) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: child,
+    );
+  }
+
+  // Image preview widget
+  Widget _imagesPicker() {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Фото'),
+          const SizedBox(height: 8),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ..._images.asMap().entries.map(
+                (entry) {
+                  final index = entry.key;
+                  final file = entry.value;
+
+                  return Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(file.path),
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _images.removeAt(index));
+                          },
+                          child: const CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.black54,
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+              if (_images.length < maxImages)
+                GestureDetector(
+                  onTap: _pickImages,
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: const Icon(Icons.add_a_photo),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 }

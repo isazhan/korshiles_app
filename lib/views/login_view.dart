@@ -110,6 +110,8 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       appBar: CustomAppBar(exit: true,),
       backgroundColor: globals.myBackColor,
@@ -128,7 +130,7 @@ class _LoginViewState extends State<LoginView> {
               ),
               child: Align(
                 alignment: Alignment.center,
-                child: Text('Вход в личный кабинет',
+                child: Text(lang=='kk' ? 'Жеке кабинетке кіру' : 'Вход в личный кабинет',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -151,8 +153,8 @@ class _LoginViewState extends State<LoginView> {
                   keyboardType: TextInputType.number,
                   maxLength: 10,
                   readOnly: _isReadOnlyPhone,
-                  decoration: const InputDecoration(
-                    labelText: 'Номер телефона',
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Телефон номері' : 'Номер телефона',
                     prefixText: '+7',
                     border: InputBorder.none,
                     counterText: '',
@@ -175,9 +177,8 @@ class _LoginViewState extends State<LoginView> {
                     controller: _codeController,
                     keyboardType: TextInputType.number,
                     maxLength: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Код верификации',
-                      //prefixText: '+7',
+                    decoration: InputDecoration(
+                      labelText: lang=='kk' ? 'Растау коды' : 'Код подтверждения',
                       border: InputBorder.none,
                       counterText: '',
                     ),
@@ -200,10 +201,8 @@ class _LoginViewState extends State<LoginView> {
                     keyboardType: TextInputType.text,
                     obscureText: _passwordVisible,
                     decoration: InputDecoration(
-                      labelText: 'Пароль',
-                      //prefixText: '+7',
+                      labelText: lang=='kk' ? 'Құпия сөз' : 'Пароль',
                       border: InputBorder.none,
-                      //counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(_passwordVisible
                           ? Icons.visibility
@@ -230,7 +229,7 @@ class _LoginViewState extends State<LoginView> {
                 onPressed: _loading ? null : _forgetPassword,
                 child: _loading
                     ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
-                    : const Text('Забыли пароль?'),
+                    : Text(lang=='kk' ? 'Құпия сөзді ұмыттыңыз ба?' : 'Забыли пароль?'),
               ),
             if (_showNewPasswordField)
               Container(
@@ -248,7 +247,7 @@ class _LoginViewState extends State<LoginView> {
                     //keyboardType: TextInputType.number,
                     obscureText: _newPasswordVisible,
                     decoration: InputDecoration(
-                      labelText: 'Придумайте пароль',
+                      labelText: lang=='kk' ? 'Құпия сөз ойлап табыңыз' : 'Придумайте пароль',
                       //prefixText: '+7',
                       border: InputBorder.none,
                       //counterText: '',
@@ -281,7 +280,7 @@ class _LoginViewState extends State<LoginView> {
                 text: TextSpan(
                   children: <TextSpan>[
                     TextSpan(
-                      text: 'Продолжая вы принимаете \n',
+                      text: lang=='kk' ? 'Жалғастыра отырып сіз қабылдайсыз: \n' : 'Продолжая вы принимаете \n',
                       style: TextStyle(
                         fontSize: 14,
                         //fontWeight: FontWeight.w600,
@@ -289,7 +288,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                     TextSpan(
-                      text: 'Пользовательское соглашение',
+                      text: lang=='kk' ? 'Пайдаланушы келісімі' : 'Пользовательское соглашение',
                       style: const TextStyle(
                         color: Colors.blue,
                         decoration: TextDecoration.underline,
@@ -318,7 +317,7 @@ class _LoginViewState extends State<LoginView> {
               onPressed: _loading ? null : _login,
               child: _loading
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
-                  : const Text('Продолжить'),
+                  : Text(lang=='kk' ? 'Жалғастыру' : 'Продолжить'),
             ),
           ],
         ),

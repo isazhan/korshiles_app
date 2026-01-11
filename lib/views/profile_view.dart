@@ -15,6 +15,7 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   final storage = const FlutterSecureStorage();
   String? _userName;
+  bool _isStaff = false;
 
   @override
   void initState() {
@@ -24,8 +25,10 @@ class _ProfileViewState extends State<ProfileView> {
 
   Future<void> _loadData() async {
     final user = await AuthService().loadUserName();
+    final staff = await AuthService().loadStaff();
     setState(() {
       _userName = user;
+      _isStaff = staff;
     });
   }
 
@@ -35,23 +38,23 @@ class _ProfileViewState extends State<ProfileView> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Удалить аккаунт'),
-          content: const Text('Вы уверены, что хотите удалить аккаунт?'),
+          title: Text('Аккаунтты жою'),
+          content: Text('Аккаунтты жоюға сенімдісіз бе?'),
           actions: <Widget>[
             TextButton(
-              child: const Text('Отмена'),
+              child: Text('Кері қайту'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Удалить'),
+              child: Text('Аккаунтты жою'),
               onPressed: () {
                 //ApiService().deleteAccount();
                 AuthService().logout(context);
                 Navigator.of(context).pop(); // Close the dialog
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Аккаунт удален')),
+                  SnackBar(content: Text('Аккаунт жойылды')),
                 );
               },
             ),
@@ -63,6 +66,8 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+
     return FutureBuilder<bool>(
       future: AuthService().isLoggedIn(),
       builder: (context, snapshot) {
@@ -115,7 +120,7 @@ class _ProfileViewState extends State<ProfileView> {
                       // My ads
                       ListTile(
                         leading: Icon(Icons.list, color: globals.myColor,),
-                        title: Text('Мои объявления'),
+                        title: Text(lang=='kk' ? 'Менің хабарландыруларым' : 'Мои объявления'),
                         trailing: Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.push(
@@ -129,11 +134,27 @@ class _ProfileViewState extends State<ProfileView> {
                         ),
                       ),
 
+                      if (_isStaff) ...[
+                        SizedBox(height: 10,),
+                        // Check Ads
+                        ListTile(
+                          leading: Icon(Icons.check_circle, color: Colors.green,),
+                          title: Text(lang=='kk' ? 'Хабарландыруларды тексеру' : 'Проверить объявления'),
+                          trailing: Icon(Icons.chevron_right),
+                          onTap: () {
+                          },
+                          tileColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ],
+
                       SizedBox(height: 10,),
                       // Delete account
                       ListTile(
                         leading: Icon(Icons.delete, color: Colors.red,),
-                        title: Text('Удалить аккаунт'),
+                        title: Text(lang=='kk' ? 'Аккаунтты жою' : 'Удалить аккаунт'),
                         trailing: Icon(Icons.chevron_right),
                         onTap: () {
                           _showConfirmationDialog(context);
@@ -148,7 +169,7 @@ class _ProfileViewState extends State<ProfileView> {
                       // Logout
                       ListTile(
                         leading: Icon(Icons.logout, color: Colors.red,),
-                        title: Text('Выйти'),
+                        title: Text(lang=='kk' ? 'Шығу' : 'Выйти'),
                         trailing: Icon(Icons.chevron_right),
                         onTap: () {
                           AuthService().logout(context);

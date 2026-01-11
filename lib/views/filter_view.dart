@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bar.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import '../globals.dart' as globals;
 
 //https://onlyflutter.com/how-to-build-better-forms-in-flutter/
 
@@ -11,6 +12,8 @@ class FilterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
         appBar: CustomAppBar(),
         body: Padding(
@@ -22,16 +25,19 @@ class FilterView extends StatelessWidget {
                   children: [
                     FormBuilderDropdown(
                       name: 'type',
-                      decoration:
-                          const InputDecoration(labelText: 'Тип объявления'),
+                      decoration: InputDecoration(
+                        labelText: lang=='kk'
+                          ? 'Хабарландыру түрі'
+                          : 'Тип объявления',
+                      ),
                       items: [
-                        {'value': 'ad_look', 'name': 'Ищу на подселение'},
-                        {'value': 'ad_go', 'name': 'Пойду на подселение'},
+                        {'value': 'ad_look', 'kk': 'Көршілес іздеймін', 'ru': 'Ищу на подселение'},
+                        {'value': 'ad_go', 'kk': 'Көршілес боламын', 'ru': 'Пойду на подселение'},
                       ]
                           .map(
                             (item) => DropdownMenuItem(
                               value: item['value'],
-                              child: Text(item['name']!),
+                              child: Text(item[lang]!),
                             ),
                           )
                           .toList(),
@@ -39,8 +45,11 @@ class FilterView extends StatelessWidget {
                     /// City
                     FormBuilderDropdown(
                       name: 'city',
-                      decoration:
-                          const InputDecoration(labelText: 'Город'),
+                      decoration: InputDecoration(
+                        labelText: lang=='kk'
+                          ? 'Қала'
+                          : 'Город',
+                      ),
                       items: [
                         {'value': '1', 'name': 'Алматы'},
                         {'value': '2', 'name': 'Астана'},
@@ -54,26 +63,32 @@ class FilterView extends StatelessWidget {
                           )
                           .toList(),
                     ),
-                    const SizedBox(height: 10),
-                    Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
-                          child: ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.saveAndValidate()) {
-                                  //print(_formKey.currentState!.value['type']);
-                                  final filters = {
-                                    'type': _formKey.currentState!.value['type'],
-                                    'city': _formKey.currentState!.value['city'],
-                                    'page': '1',
-                                  };
-                                  //ApiService().getAds({'type': 'ad_go'});
-                                  Navigator.pop(context, filters);
-                                }
-                              },
-                              child: const Text('Показать результаты')),
-                        ))
-                  ])),
-        ));
+                    const SizedBox(height: 20),
+                    
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: globals.myColor,
+                          foregroundColor: Colors.white,
+                          fixedSize: const Size.fromHeight(40),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.saveAndValidate()) {
+                            //print(_formKey.currentState!.value['type']);
+                            final filters = {
+                              'type': _formKey.currentState!.value['type'],
+                              'city': _formKey.currentState!.value['city'],
+                              'page': '1',
+                            };
+                            //ApiService().getAds({'type': 'ad_go'});
+                            Navigator.pop(context, filters);
+                          }
+                        },
+                        child: Text(lang=='kk' ? 'Нәтижелерді көрсету' : 'Показать результаты')),
+                    )
+                  ])
+          ),
+        )
+    );
   }
 }
