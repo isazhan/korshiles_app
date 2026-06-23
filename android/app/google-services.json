@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658057192207",
+    "project_id": "korshiles-17d52",
+    "storage_bucket": "korshiles-17d52.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658057192207:android:c31d4880d6505be94f147a",
+        "android_client_info": {
+          "package_name": "com.korshiles_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC3DAtf4ziEYsmEwgLqEN7PX0aUjlre4g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
