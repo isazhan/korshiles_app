@@ -1,4 +1,4 @@
-name: Deploy to TestFlight 
+name: Deploy to TestFlight
 
 on:
   push:
@@ -63,8 +63,17 @@ jobs:
           buildNumber="${versionLine#*+}"
 
           echo "📦 Building version $buildName (build number $buildNumber)"
+
+          echo "FLUTTER_TARGET_PLATFORM_VERSION=15.0" >> ios/Flutter/Generated.xcconfig
+          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
+          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Release.xcconfig
           
-          flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
+          flutter build ipa --release \
+            --build-number=$buildNumber \
+            --build-name=$buildName \
+            -- \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
+            SWIFT_PUBLISH_EVERYTHING=YES
 
       - name: Save App Store Connect API Key
         run: |
