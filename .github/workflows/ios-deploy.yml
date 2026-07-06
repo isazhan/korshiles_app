@@ -85,7 +85,7 @@ jobs:
           EOF
 
       - name: Install Fastlane
-        run: sudo gem install fastlane -v 2.227.2
+        run: sudo gem install fastlane -v 2.237.0
 
       - name: Sync System Clock
         run: sudo sntp -sS time.apple.com || true
@@ -98,10 +98,18 @@ jobs:
 
           echo "📦 Processing version $buildName (build number $buildNumber)"
           
+          cd ios
+          pod deintegrate || true
+          rm -f Podfile Podfile.lock
+          cd ..
+
           echo "FLUTTER_TARGET_PLATFORM_VERSION=15.0" >> ios/Flutter/Generated.xcconfig
           echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
           echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Release.xcconfig
           
+          sed -i '' '/Pods-Runner/d' ios/Flutter/Debug.xcconfig || true
+          sed -i '' '/Pods-Runner/d' ios/Flutter/Release.xcconfig || true
+
           export IPHONEOS_DEPLOYMENT_TARGET=15.0
 
           flutter pub get
@@ -110,11 +118,9 @@ jobs:
             --workspace ios/Runner.xcworkspace \
             --scheme Runner \
             --export_method app-store \
-            --team_id "T848W2JRH4" \
-            --codesigning_identity "iPhone Distribution: Ulan Isazhan (T848W2JRH4)" \
             --output_directory build/ios/ipa \
             --output_name "korshiles.ipa" \
-            --xcargs "IPHONEOS_DEPLOYMENT_TARGET=15.0"
+            --xcargs "IPHONEOS_DEPLOYMENT_TARGET=15.0 DEVELOPMENT_TEAM=T848W2JRH4 CODE_SIGN_IDENTITY=\"iPhone Distribution: Ulan Isazhan (T848W2JRH4)\""
 
           fastlane pilot upload \
             --ipa "build/ios/ipa/korshiles.ipa" \
