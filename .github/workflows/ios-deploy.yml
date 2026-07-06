@@ -97,31 +97,42 @@ jobs:
           buildNumber="${versionLine#*+}"
 
           echo "📦 Processing version $buildName (build number $buildNumber)"
-          
-          cd ios
-          pod deintegrate || true
-          rm -f Podfile Podfile.lock
-          cd ..
 
           echo "FLUTTER_TARGET_PLATFORM_VERSION=15.0" >> ios/Flutter/Generated.xcconfig
           echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
           echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Release.xcconfig
           
-          sed -i '' '/Pods-Runner/d' ios/Flutter/Debug.xcconfig || true
-          sed -i '' '/Pods-Runner/d' ios/Flutter/Release.xcconfig || true
-
           export IPHONEOS_DEPLOYMENT_TARGET=15.0
 
           flutter pub get
 
-          fastlane gym \
-            --workspace ios/Runner.xcworkspace \
-            --scheme Runner \
-            --export_method app-store \
-            --output_directory build/ios/ipa \
-            --output_name "korshiles.ipa" \
-            --xcargs "IPHONEOS_DEPLOYMENT_TARGET=15.0 DEVELOPMENT_TEAM=T848W2JRH4 CODE_SIGN_IDENTITY=\"iPhone Distribution: Ulan Isazhan (T848W2JRH4)\""
+          cat <<EOF > /Users/runner/work/export_options.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>destination</key>
+              <key>export</key>
+              <key>method</key>
+              <key>app-store</key>
+              <key>signingStyle</key>
+              <key>manual</key>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.korshiles.app</key>
+                  <key>KorshilesProvision</key>
+              </dict>
+              <key>teamID</key>
+              <key>T848W2JRH4</key>
+          </dict>
+          </plist>
+          EOF
+
+          flutter build ipa --release \
+            --build-number=$buildNumber \
+            --build-name=$buildName \
+            --export-options-plist=/Users/runner/work/export_options.plist
 
           fastlane pilot upload \
-            --ipa "build/ios/ipa/korshiles.ipa" \
+            --ipa $(find build/ios/archive/ -name "*.ipa" -o -name "Runner.ipa" -o -name "*.ipa" | head -n 1) \
             --api_key_path /Users/runner/work/AuthKey.json
