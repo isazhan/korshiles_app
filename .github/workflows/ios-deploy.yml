@@ -56,23 +56,6 @@ jobs:
       - name: Set up Code signing settings on Xcode project
         run: xcode-project use-profiles
 
-      - name: Build IPA for Distribution
-        run: |
-          versionLine=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-          buildName="${versionLine%%+*}"
-          buildNumber="${versionLine#*+}"
-
-          echo "📦 Building version $buildName (build number $buildNumber)"
-
-          echo "FLUTTER_TARGET_PLATFORM_VERSION=15.0" >> ios/Flutter/Generated.xcconfig
-          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
-          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Release.xcconfig
-          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Debug.xcconfig
-
-          export IPHONEOS_DEPLOYMENT_TARGET=15.0
-          
-          flutter build ipa --release --build-number=$buildNumber --build-name=$buildName
-
       - name: Save App Store Connect API Key
         run: |
           SAFE_KEY=$(echo "${APP_STORE_CONNECT_PRIVATE_KEY}" | awk '{printf "%s\\n", $0}')
@@ -92,47 +75,46 @@ jobs:
 
       - name: Build and Upload to TestFlight via Fastlane
         run: |
+          # 1. Извлекаем версию
           versionLine=$(grep '^version:' pubspec.yaml | awk '{print $2}')
           buildName="${versionLine%%+*}"
           buildNumber="${versionLine#*+}"
-
           echo "📦 Processing version $buildName (build number $buildNumber)"
 
+          # 2. Конфигурируем таргеты
           echo "FLUTTER_TARGET_PLATFORM_VERSION=15.0" >> ios/Flutter/Generated.xcconfig
           echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
           echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Release.xcconfig
-          
           export IPHONEOS_DEPLOYMENT_TARGET=15.0
 
-          flutter pub get
-
+          # 3. Генерируем корректный export_options.plist
           cat <<EOF > /Users/runner/work/export_options.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-              <key>destination</key>
-              <key>export</key>
               <key>method</key>
-              <key>app-store</key>
+              <string>app-store</string>
               <key>signingStyle</key>
-              <key>manual</key>
+              <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
                   <key>com.korshiles.app</key>
-                  <key>KorshilesProvision</key>
+                  <string>KorshilesProvision</string>
               </dict>
               <key>teamID</key>
-              <key>T848W2JRH4</key>
+              <string>T848W2JRH4</string>
           </dict>
           </plist>
           EOF
 
+          # 4. Собираем проект ОДИН раз
           flutter build ipa --release \
             --build-number=$buildNumber \
             --build-name=$buildName \
             --export-options-plist=/Users/runner/work/export_options.plist
 
+          # 5. Загружаем в TestFlight (путь к ipa теперь фиксированный)
           fastlane pilot upload \
-            --ipa $(find build/ios/archive/ -name "*.ipa" -o -name "Runner.ipa" -o -name "*.ipa" | head -n 1) \
+            --ipa build/ios/ipa/*.ipa \
             --api_key_path /Users/runner/work/AuthKey.json
