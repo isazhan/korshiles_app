@@ -90,9 +90,30 @@ jobs:
       - name: Sync System Clock
         run: sudo sntp -sS time.apple.com || true
 
-      - name: Upload IPA to App Store Connect
+      - name: Build and Upload to TestFlight via Fastlane
         run: |
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
-          echo "🚀 Found IPA at: $IPA_PATH"
+          versionLine=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          buildName="${versionLine%%+*}"
+          buildNumber="${versionLine#*+}"
+
+          echo "📦 Processing version $buildName (build number $buildNumber)"
           
-          fastlane pilot upload --ipa "$IPA_PATH" --api_key_path /Users/runner/work/AuthKey.json
+          echo "FLUTTER_TARGET_PLATFORM_VERSION=15.0" >> ios/Flutter/Generated.xcconfig
+          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
+          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Release.xcconfig
+          
+          export IPHONEOS_DEPLOYMENT_TARGET=15.0
+
+          flutter build ios --release --build-number=$buildNumber --build-name=$buildName --no-codesign
+
+          fastlane gym \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner \
+            --export_method app-store \
+            --output_directory build/ios/ipa \
+            --output_name "korshiles.ipa" \
+            --xcargs "IPHONEOS_DEPLOYMENT_TARGET=15.0"
+
+          fastlane pilot upload \
+            --ipa "build/ios/ipa/korshiles.ipa" \
+            --api_key_path /Users/runner/work/AuthKey.json
