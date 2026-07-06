@@ -83,8 +83,8 @@ class _MyAdsViewState extends State<MyAdsView> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(lang=='kk'
-              ? 'Хабарландырулар 30 күннен кейін автоматты түрде жойылады'
-              : 'Объявления автоматически удаляются через 30 дней',
+              ? 'Хабарландырулар 7 күннен кейін автоматты түрде жойылады'
+              : 'Объявления автоматически удаляются через 7 дней',
               style: TextStyle(
                 //color: Colors.white,
                 fontSize: 14,
@@ -102,19 +102,20 @@ class _MyAdsViewState extends State<MyAdsView> {
                         itemCount: _data.length,
                         itemBuilder: (context, index) {
                           return AdCardMy(
-                            title: _data[index]['type']['ru'],
+                            title: _data[index]['type'][lang],
                             ad: _data[index]['ad'].toString(),
                             photos: (_data[index]['photos'] != null)
                                 ? globals.host + _data[index]['photos'][0]
                                 : 'no',
-                            city: _data[index]['city']['ru'],
+                            city: _data[index]['city'][lang],
                             district: (_data[index]['district'] != '')
-                                ? _data[index]['district']['ru']
+                                ? _data[index]['district'][lang]
                                 : '',
                             description: _data[index]['info'],
                             views: _data[index]['views'].toString(),
                             date: _data[index]['create_time'].toString(),
                             publish: _data[index]['publish'],
+                            onDelete: () {_fetchMyAds();},
                           );
                         },
                       ),

@@ -9,7 +9,7 @@ class ApiService {
   final storage = const FlutterSecureStorage();
   
 
-  Future<Map<String, dynamic>> justGet(endpoint, data) async {
+  Future<Map<String, dynamic>> justGet(String endpoint, Map<String, dynamic> data) async {
     final apiUrl = Uri.parse('$baseUrl$endpoint').replace(queryParameters: data);
 
     try {
@@ -26,14 +26,12 @@ class ApiService {
   }
 
 
-  Future<Map<String, dynamic>> postWithAuth(endpoint, data) async {
-    final access = await storage.read(key: 'access');
+  Future<Map<String, dynamic>> justPost(String endpoint, Map<String, dynamic> data) async {
     
     final response = await http.post(
       Uri.parse('$baseUrl$endpoint'),
       headers: {
         'Content-Type': 'application/json',
-        if (access != null) 'Authorization': 'Bearer $access',
       },
       body: jsonEncode(data),
     );
@@ -51,16 +49,16 @@ class ApiService {
     Map<String, dynamic> fields,
     List<XFile> images,
   ) async {
-    final access = await storage.read(key: 'access');
+    //final access = await storage.read(key: 'access');
 
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl$endpoint'),
     );
 
-    if (access != null) {
-      request.headers['Authorization'] = 'Bearer $access';
-    }
+    //if (access != null) {
+      //request.headers['Authorization'] = 'Bearer $access';
+    //}
 
     // common fields
     fields.forEach((key, value) {

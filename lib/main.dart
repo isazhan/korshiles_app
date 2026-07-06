@@ -1,18 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:korshiles_app/requests/auth.dart';
 import 'views/home_view.dart';
 import 'views/create_view.dart';
 import 'views/profile_view.dart';
-import 'views/login_view.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'globals.dart' as globals;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  
   if (!kIsWeb) unawaited(MobileAds.instance.initialize());
+  
+  
+  try {
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInAnonymously();
+      //print("Успешный анонимный вход. UID: ${FirebaseAuth.instance.currentUser?.uid}");
+    } else {
+      //print("Пользователь уже авторизован. UID: ${FirebaseAuth.instance.currentUser?.uid}");
+    }
+  } catch (e) {
+    //print("Ошибка анонимной авторизации при старте: $e");
+  }
+  
+
   runApp(const MyApp());
 }
 
@@ -86,17 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _onItemTapped(int index) async {
-    if (index != 0) {
-      final loggedIn = await AuthService().isLoggedIn();
-      if (!loggedIn) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginView()),
-        );
-        return;
-      }
-    }
-
     setState(() {
       _selectedIndex = index;
     });

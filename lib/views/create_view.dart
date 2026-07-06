@@ -14,6 +14,8 @@ import '../requests/auth.dart';
 import '../widgets/bar.dart';
 import 'my_ads_view.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class CreateView extends StatefulWidget {
   final VoidCallback? onSuccess;
@@ -35,8 +37,6 @@ class _CreateViewState extends State<CreateView> {
   List<dynamic> _districts = [];
   List<dynamic> _adTypes = [];
 
-  late Future<bool> _isLoggedInFuture;
-
   // Image picker
   final ImagePicker _picker = ImagePicker();
   List<XFile> _images = [];
@@ -47,7 +47,6 @@ class _CreateViewState extends State<CreateView> {
   @override
   void initState() {
     super.initState();
-    _isLoggedInFuture = AuthService().isLoggedIn();
     loadJson();
   }
 
@@ -106,6 +105,7 @@ class _CreateViewState extends State<CreateView> {
     final values = formState.value;
 
     final response = await ApiService().postMultipartWithAuth('api/api_create_ad', {
+      'author': FirebaseAuth.instance.currentUser?.uid ?? '',
       'type': values['type'],
       'city': values['city'],
       'district': values['district'],
@@ -146,187 +146,174 @@ class _CreateViewState extends State<CreateView> {
   Widget build(BuildContext context) {
     final lang = Localizations.localeOf(context).languageCode;
     
-    return FutureBuilder<bool>(
-      future: _isLoggedInFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return Scaffold(
+      appBar: CustomAppBar(),
+      backgroundColor: globals.myBackColor,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: FormBuilder(
+          key: _formKey,
+          child: ListView(
+          //shrinkWrap: true,
+            children: [
 
-        if (snapshot.data != true) {
-          return const SizedBox();
-        }
-
-        return Scaffold(
-          appBar: CustomAppBar(),
-          backgroundColor: globals.myBackColor,
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: FormBuilder(
-              key: _formKey,
-              child: ListView(
-              //shrinkWrap: true,
-                children: [
-
-                  // Tittle
-                  Container(
-                    //margin: EdgeInsets.only(right: 10),
-                    padding: EdgeInsets.only(left: 10),
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text(lang=='kk' ? 'Хабарландыру беру' : 'Подать объявление',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ), 
-                  ),
-
-                  // Ad type
-                  _dropdown(
-                    child: FormBuilderDropdown<String>(
-                      name: 'type',
-                      validator: FormBuilderValidators.required(
-                        errorText: lang == 'kk'
-                            ? 'Хабарландыру түрін таңдаңыз'
-                            : 'Выберите тип объявления',
-                      ),
-                      decoration: InputDecoration(
-                        labelText: lang=='kk' ? 'Хабарландыру түрі' : 'Тип объявления',
-                        border: InputBorder.none,
-                      ),
-                      items: _adTypes
-                        .map((ad) => DropdownMenuItem<String>(
-                              value: ad['id'],
-                              child: Text(ad[lang]),
-                            ))
-                        .toList(),
-                    )
-                  ),
-
-                  // City
-                  _dropdown(
-                    child: FormBuilderDropdown<String>(
-                      name: 'city',
-                      validator: FormBuilderValidators.required(
-                        errorText: lang == 'kk'
-                            ? 'Қаланы таңдаңыз'
-                            : 'Выберите город',
-                      ),
-                      decoration: InputDecoration(
-                        labelText: lang=='kk' ? 'Қала' : 'Город',
-                        border: InputBorder.none,
-                      ),
-                      items: _cities
-                        .map((city) => DropdownMenuItem<String>(
-                              value: city['id'],
-                              child: Text(city[lang]),
-                            ))
-                        .toList(),
-                      onChanged: _onCitySelected,
-                    )
-                  ),
-
-                  // District
-                  _dropdown(
-                    child: FormBuilderDropdown<String>(
-                      name: 'district',                      
-                      decoration: InputDecoration(
-                        labelText: lang=='kk' ? 'Аудан' : 'Район',
-                        border: InputBorder.none,
-                      ),
-                      items: _districts
-                        .map((district) => DropdownMenuItem<String>(
-                              value: district['id'],
-                              child: Text(district[lang]),
-                            ))
-                        .toList(),
-                    )
-                  ),
-
-                  // Address
-                  _input(
-                    child: FormBuilderTextField(
-                      name: 'address',
-                      decoration: InputDecoration(
-                        labelText: lang=='kk' ? 'Мекен-жай' : 'Адрес',
-                        border: InputBorder.none,
-                      ),
+              // Tittle
+              Container(
+                //margin: EdgeInsets.only(right: 10),
+                padding: EdgeInsets.only(left: 10),
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(lang=='kk' ? 'Хабарландыру беру' : 'Подать объявление',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-
-                  // Description                  
-                  _input(
-                    child: FormBuilderTextField(
-                      name: 'description',
-                      validator: FormBuilderValidators.required(
-                        errorText: lang == 'kk'
-                            ? 'Сипаттама жазылуы тиіс'
-                            : 'Напишите описание',
-                      ),
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        labelText: lang=='kk' ? 'Сипаттама' : 'Описание',
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-
-                  // Contact
-                  _input(
-                    child: FormBuilderTextField(
-                      name: 'contact',
-                      maxLength: 10,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: lang=='kk' ? 'Байланыс' : 'Контакты',
-                        prefixText: '+7',
-                        counterText: '',
-                        border: InputBorder.none,
-                      ),
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(),
-                        FormBuilderValidators.numeric(),
-                        FormBuilderValidators.equalLength(
-                          10,
-                          errorText: lang=='kk' ? 'Номер толық жазылмаған' : 'Номер введен не полностью',
-                        ),
-                      ]),
-                    ),
-                  ),
-
-                  _imagesPicker(),
-
-                  const SizedBox(height: 10),                
-
-                  if (_error != null)
-                    Text(_error!, style: const TextStyle(color: Colors.red)),
-
-                  const SizedBox(height: 10),
-
-                  ElevatedButton(
-                    onPressed: _loading ? null : _createAd,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: globals.myColor,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: _loading
-                        ? const CircularProgressIndicator()
-                        : Text(lang=='kk' ? 'Хабарландыру беру' : 'Подать объявление'),
-                  ),
-
-                ],
+                ), 
               ),
-            ),
-          )
-        );
-      },
+
+              // Ad type
+              _dropdown(
+                child: FormBuilderDropdown<String>(
+                  name: 'type',
+                  validator: FormBuilderValidators.required(
+                    errorText: lang == 'kk'
+                        ? 'Хабарландыру түрін таңдаңыз'
+                        : 'Выберите тип объявления',
+                  ),
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Хабарландыру түрі' : 'Тип объявления',
+                    border: InputBorder.none,
+                  ),
+                  items: _adTypes
+                    .map((ad) => DropdownMenuItem<String>(
+                          value: ad['id'],
+                          child: Text(ad[lang]),
+                        ))
+                    .toList(),
+                )
+              ),
+
+              // City
+              _dropdown(
+                child: FormBuilderDropdown<String>(
+                  name: 'city',
+                  validator: FormBuilderValidators.required(
+                    errorText: lang == 'kk'
+                        ? 'Қаланы таңдаңыз'
+                        : 'Выберите город',
+                  ),
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Қала' : 'Город',
+                    border: InputBorder.none,
+                  ),
+                  items: _cities
+                    .map((city) => DropdownMenuItem<String>(
+                          value: city['id'],
+                          child: Text(city[lang]),
+                        ))
+                    .toList(),
+                  onChanged: _onCitySelected,
+                )
+              ),
+
+              // District
+              _dropdown(
+                child: FormBuilderDropdown<String>(
+                  name: 'district',                      
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Аудан' : 'Район',
+                    border: InputBorder.none,
+                  ),
+                  items: _districts
+                    .map((district) => DropdownMenuItem<String>(
+                          value: district['id'],
+                          child: Text(district[lang]),
+                        ))
+                    .toList(),
+                )
+              ),
+
+              // Address
+              _input(
+                child: FormBuilderTextField(
+                  name: 'address',
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Мекен-жай' : 'Адрес',
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+
+              // Description                  
+              _input(
+                child: FormBuilderTextField(
+                  name: 'description',
+                  validator: FormBuilderValidators.required(
+                    errorText: lang == 'kk'
+                        ? 'Сипаттама жазылуы тиіс'
+                        : 'Напишите описание',
+                  ),
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Сипаттама' : 'Описание',
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+
+              // Contact
+              _input(
+                child: FormBuilderTextField(
+                  name: 'contact',
+                  maxLength: 10,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: lang=='kk' ? 'Байланыс' : 'Контакты',
+                    prefixText: '+7',
+                    counterText: '',
+                    border: InputBorder.none,
+                  ),
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(),
+                    FormBuilderValidators.numeric(),
+                    FormBuilderValidators.equalLength(
+                      10,
+                      errorText: lang=='kk' ? 'Номер толық жазылмаған' : 'Номер введен не полностью',
+                    ),
+                  ]),
+                ),
+              ),
+
+              _imagesPicker(),
+
+              const SizedBox(height: 10),                
+
+              if (_error != null)
+                Text(_error!, style: const TextStyle(color: Colors.red)),
+
+              const SizedBox(height: 10),
+
+              ElevatedButton(
+                onPressed: _loading ? null : _createAd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: globals.myColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: _loading
+                    ? const CircularProgressIndicator()
+                    : Text(lang=='kk' ? 'Хабарландыру беру' : 'Подать объявление'),
+              ),
+
+            ],
+          ),
+        ),
+      )
     );
   }
 

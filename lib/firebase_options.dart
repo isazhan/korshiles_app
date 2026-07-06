@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -33,10 +30,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -56,7 +50,6 @@ class DefaultFirebaseOptions {
     projectId: 'korshiles-17d52',
     storageBucket: 'korshiles-17d52.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBhTt0LCG5W5GbWyfu65r4v3JHfQh9i2MI',
     appId: '1:658057192207:ios:555353fb48d029704f147a',
@@ -64,5 +57,24 @@ class DefaultFirebaseOptions {
     projectId: 'korshiles-17d52',
     storageBucket: 'korshiles-17d52.firebasestorage.app',
     iosBundleId: 'com.korshiles.app',
+  );
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBhWANlffkefusrxrFpzHwMsVHFiyV16UY',
+    appId: '1:658057192207:web:4487ed81a5fd4acf4f147a',
+    messagingSenderId: '658057192207',
+    projectId: 'korshiles-17d52',
+    authDomain: 'korshiles-17d52.firebaseapp.com',
+    storageBucket: 'korshiles-17d52.firebasestorage.app',
+    measurementId: 'G-JFSZQL2QS8',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBhWANlffkefusrxrFpzHwMsVHFiyV16UY',
+    appId: '1:658057192207:web:f906932f84721ba64f147a',
+    messagingSenderId: '658057192207',
+    projectId: 'korshiles-17d52',
+    authDomain: 'korshiles-17d52.firebaseapp.com',
+    storageBucket: 'korshiles-17d52.firebasestorage.app',
+    measurementId: 'G-T7WP9FS8Z9',
   );
 }

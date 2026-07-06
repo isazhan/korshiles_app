@@ -4,6 +4,10 @@ import '../widgets/bar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../globals.dart' as globals;
 import 'my_ads_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class ProfileView extends StatefulWidget {
   const ProfileView({Key? key}) : super(key: key);
@@ -14,7 +18,6 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   final storage = const FlutterSecureStorage();
-  String? _userName;
   bool _isStaff = false;
 
   @override
@@ -24,10 +27,8 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _loadData() async {
-    final user = await AuthService().loadUserName();
     final staff = await AuthService().loadStaff();
     setState(() {
-      _userName = user;
       _isStaff = staff;
     });
   }
@@ -67,131 +68,165 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
     final lang = Localizations.localeOf(context).languageCode;
-
-    return FutureBuilder<bool>(
-      future: AuthService().isLoggedIn(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasData && snapshot.data == true) {
-          return Scaffold(
-            appBar: CustomAppBar(),
-            backgroundColor: globals.myBackColor,
-            body: Column(
+    
+    return Scaffold(
+      appBar: CustomAppBar(),
+      backgroundColor: globals.myBackColor,
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  child: Row(
-                    children: [
 
-                      //Number
-                      Expanded(
-                        child: Container(
-                          //margin: EdgeInsets.symmetric(horizontal: 10),
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(_userName ?? 'Загрузка...',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ), 
-                        ),
-                      ),
-
-                    ],
-                  ),
-                ),
-                
-                
+                //Number
                 Expanded(
-                  child: ListView(
+                  child: Container(
+                    //margin: EdgeInsets.symmetric(horizontal: 10),
                     padding: EdgeInsets.symmetric(horizontal: 10),
-                    children: [
-                      // My ads
-                      ListTile(
-                        leading: Icon(Icons.list, color: globals.myColor,),
-                        title: Text(lang=='kk' ? 'Менің хабарландыруларым' : 'Мои объявления'),
-                        trailing: Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MyAdsView(user: _userName,)),
-                          );
-                        },
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(lang=='kk' ? 'Сәлем 👋' : 'Привет 👋',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-
-                      if (_isStaff) ...[
-                        SizedBox(height: 10,),
-                        // Check Ads
-                        ListTile(
-                          leading: Icon(Icons.check_circle, color: Colors.green,),
-                          title: Text(lang=='kk' ? 'Хабарландыруларды тексеру' : 'Проверить объявления'),
-                          trailing: Icon(Icons.chevron_right),
-                          onTap: () {
-                          },
-                          tileColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ],
-
-                      SizedBox(height: 10,),
-                      // Delete account
-                      ListTile(
-                        leading: Icon(Icons.delete, color: Colors.red,),
-                        title: Text(lang=='kk' ? 'Аккаунтты жою' : 'Удалить аккаунт'),
-                        trailing: Icon(Icons.chevron_right),
-                        onTap: () {
-                          _showConfirmationDialog(context);
-                        },
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      
-                      SizedBox(height: 10,),
-                      // Logout
-                      ListTile(
-                        leading: Icon(Icons.logout, color: Colors.red,),
-                        title: Text(lang=='kk' ? 'Шығу' : 'Выйти'),
-                        trailing: Icon(Icons.chevron_right),
-                        onTap: () {
-                          AuthService().logout(context);
-                        },
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ],
+                    ), 
                   ),
                 ),
 
-              
               ],
-            )
-          );
-        } else {
+            ),
+          ),
           
-          return const SizedBox(); // placeholder
-        }
-      },
+          
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              children: [
+                // My ads
+                ListTile(
+                  leading: Icon(Icons.list, color: globals.myColor,),
+                  title: Text(lang=='kk' ? 'Менің хабарландыруларым' : 'Мои объявления'),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyAdsView(user: FirebaseAuth.instance.currentUser?.uid ?? '',)),
+                    );
+                  },
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),                
+                
+                SizedBox(height: 20,),
+                Text(lang=='kk' ? 'Бізбен байланыс' : 'Связаться с нами'),
+                SizedBox(height: 10,),
+
+                // Telegram
+                ListTile(
+                  leading: FaIcon(FontAwesomeIcons.telegram, color: Colors.blue),
+                  title: Text('Telegram'),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () async{
+                          final Uri url = Uri(scheme: 'https', host: 't.me', path: 'korshiles');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+
+                SizedBox(height: 10,),
+
+                // Whatsapp
+                ListTile(
+                  leading: FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green),
+                  title: Text('WhatsApp'),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () async{
+                          final Uri url = Uri(scheme: 'https', host: 'wa.me', path: '+77474232744');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+
+                SizedBox(height: 10,),
+
+                // Threads
+                ListTile(
+                  leading: FaIcon(FontAwesomeIcons.threads, color: Colors.black),
+                  title: Text('Threads'),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () async{
+                          final Uri url = Uri(scheme: 'https', host: 'threads.net', path: '@korshiles.kz');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0, top: 8.0),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  // Version
+                  Text(
+                    lang == 'kk' ? 'Қосымша нұсқасы: 1.0.12' : 'Версия приложения: 1.0.12',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  // UserID
+                  Text(
+                    FirebaseAuth.instance.currentUser?.uid ?? '',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ]
+              )
+            ),
+          ),
+
+
+        ],
+      )
     );
+
   }
 }

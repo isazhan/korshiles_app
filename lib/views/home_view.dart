@@ -130,7 +130,7 @@ class _HomeViewState extends State<HomeView> {
 
     return Scaffold(
       appBar: CustomAppBar(),
-      backgroundColor: Color.fromRGBO(240, 240, 240, 1),
+      backgroundColor: globals.myBackColor,
       body: Column(children: [
 
         // Filter and Sort buttons
@@ -233,9 +233,9 @@ class _HomeViewState extends State<HomeView> {
                   photos: (_data[index]['photos'] != null)
                       ? globals.host + _data[index]['photos'][0]
                       : 'no',
-                  city: _data[index]['city']['ru'],
+                  city: _data[index]['city'][lang],
                   district: (_data[index]['district'] != '')
-                      ? _data[index]['district']['ru']
+                      ? _data[index]['district'][lang]
                       : '',
                   description: _data[index]['info'],
                   views: _data[index]['views'].toString(),
@@ -252,9 +252,9 @@ class _HomeViewState extends State<HomeView> {
             photos: (_data[index]['photos'] != null)
                 ? globals.host + _data[index]['photos'][0]
                 : 'no',
-            city: _data[index]['city']['ru'],
+            city: _data[index]['city'][lang],
             district: (_data[index]['district'] != '')
-                ? _data[index]['district']['ru']
+                ? _data[index]['district'][lang]
                 : '',
             description: _data[index]['info'],
             views: _data[index]['views'].toString(),
