@@ -63,8 +63,15 @@ jobs:
           buildNumber="${versionLine#*+}"
 
           echo "📦 Building version $buildName (build number $buildNumber)"
+
+          PLIST_PATH="ios/Flutter/AppFrameworkInfo.plist"
+          sed -i '' '/<key>MinimumOSVersion<\/key>/,/<\/string>/s/<string>.*<\/string>/<string>15.0<\/string>/' $PLIST_PATH
           
-          flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
+          flutter build ipa --release \
+            --build-number=$buildNumber \
+            --build-name=$buildName \
+            --export-options-plist=$HOME/export_options.plist \
+            --xcconfig="IPHONEOS_DEPLOYMENT_TARGET=15.0"
 
       - name: Save App Store Connect API Key
         run: |
