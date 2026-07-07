@@ -1,4 +1,4 @@
-name: Deploy to TestFlight 
+name: Deploy to TestFlight
 
 on:
   push:
@@ -39,6 +39,7 @@ jobs:
           cd ios
           pod repo update
           pod install
+          cd ../
 
       - name: Pre-build iOS configuration
         run: flutter build ios --config-only
