@@ -1,0 +1,90 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    env:
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_APP_ID: com.korshiles.app
+      DISTRIBUTION_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_P12 }}
+      DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+      PROVISIONING_PROFILE: ${{ secrets.IOS_PROFILE_BASE64 }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: List of Xcode versions
+        run: ls /Applications | grep Xcode
+      - name: Xcode version select
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+      - name: Current Xcode version
+        run: xcodebuild -version
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+
+      - run: |
+          flutter clean
+          flutter pub get
+
+      - name: Install the CodeMagic CLI
+        run:  pip install codemagic-cli-tools
+
+      - name: Initialize keychain
+        run: keychain initialize
+
+      - name: Set up Provisioning Profile
+        run: |
+          PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_HOME"
+          PROFILE_PATH="$(mktemp "$PROFILES_HOME"/$(uuidgen).mobileprovision)"
+          echo ${PROVISIONING_PROFILE} | base64 --decode > "$PROFILE_PATH"
+          echo "Saved provisioning profile $PROFILE_PATH"   
+
+      - name: Set up Distribution Certificate
+        run: |
+          echo $DISTRIBUTION_CERTIFICATE | base64 --decode > /tmp/certificate.p12
+          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $DISTRIBUTION_CERTIFICATE_PASSWORD
+
+      - name: Set up Code signing settings on Xcode project
+        run: xcode-project use-profiles
+
+      - name: Build IPA for Distribution
+        run: |
+          versionLine=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          buildName="${versionLine%%+*}"
+          buildNumber="${versionLine#*+}"
+
+          echo "📦 Building version $buildName (build number $buildNumber)"
+          
+          flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
+
+      - name: Save App Store Connect API Key
+        run: |
+          SAFE_KEY=$(echo "${APP_STORE_CONNECT_PRIVATE_KEY}" | awk '{printf "%s\\n", $0}')
+          cat <<EOF > /Users/runner/work/AuthKey.json
+          {
+            "key_id": "${APP_STORE_CONNECT_KEY_IDENTIFIER}",
+            "issuer_id": "${APP_STORE_CONNECT_ISSUER_ID}",
+            "key": "${SAFE_KEY}"
+          }
+          EOF
+
+      - name: Install Fastlane
+        run: sudo gem install fastlane -v 2.237.0
+
+      - name: Sync System Clock
+        run: sudo sntp -sS time.apple.com || true
+
+      - name: Upload IPA to App Store Connect
+        run: |
+          fastlane pilot upload \
+          --ipa $(find $(pwd) -name "*.ipa") \
+          --api_key_path /Users/runner/work/AuthKey.json

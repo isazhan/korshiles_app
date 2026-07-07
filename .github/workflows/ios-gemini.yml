@@ -101,12 +101,7 @@ jobs:
           flutter build ipa --release \
             --export-options-plist=exportOptions.plist \
             --build-name=$buildName \
-            --build-number=$buildNumber \
-            --inputs-from-secure-properties=false \
-            --codesign \
-            --xcconfig="DEVELOPMENT_TEAM=T848W2JRH4" \
-            --xcconfig="PROVISIONING_PROFILE_SPECIFIER=Korshiles_TestFlight_Profile" \
-            --xcconfig="CODE_SIGN_STYLE=Manual"
+            --build-number=$buildNumber
 
       - name: Upload private key for App Store Connect API
         run: |
