@@ -34,6 +34,9 @@ jobs:
           flutter clean
           flutter pub get
 
+      - name: Pre-build iOS configuration
+        run: flutter build ios --config-only
+
       - name: Install the CodeMagic CLI
         run:  pip install codemagic-cli-tools
 
