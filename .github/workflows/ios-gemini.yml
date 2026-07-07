@@ -1,0 +1,87 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    env:
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_APP_ID: com.korshiles.app
+      DISTRIBUTION_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_P12 }}
+      DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+      PROVISIONING_PROFILE: ${{ secrets.IOS_PROFILE_BASE64 }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Apple Certificate and Provisioning Profile
+        run: |
+          # Создаем переменные для путей
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/profile.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # 1. Декодируем сертификат и профиль из base64
+          echo -n "$DISTRIBUTION_CERTIFICATE" | base64 --decode --output $CERTIFICATE_PATH
+          echo -n "$PROVISIONING_PROFILE" | base64 --decode --output $PP_PATH
+
+          # 2. Создаем временную связку ключей (keychain)
+          security create-keychain -p "" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security default-keychain -s $KEYCHAIN_PATH
+          security unlock-keychain -p "" $KEYCHAIN_PATH
+
+          # 3. Импортируем сертификат в keychain
+          security import $CERTIFICATE_PATH -k $KEYCHAIN_PATH -P "$DISTRIBUTION_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" $KEYCHAIN_PATH
+
+          # 4. Перемещаем профиль обеспечения в системную папку Xcode
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.6'
+
+      - run: |
+          flutter clean
+          flutter pub get
+
+      - name: Build IPA
+        run: |
+          # Собираем релизный .ipa без подписи через подпроцессы, 
+          # Flutter сам подхватит установленный в систему профиль, если в Xcode настроен Automatic Signing 
+          # или прописан конкретный Provisioning Profile Specifier.
+          versionLine=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          buildName="${versionLine%%+*}"
+          buildNumber="${versionLine#*+}"
+
+          echo "📦 Building version $buildName (build number $buildNumber)"
+
+          flutter build ipa --release --export-method=app-store --build-number=$buildNumber --build-name=$buildName
+
+      - name: Upload private key for App Store Connect API
+        run: |
+          # Для работы xcrun altool/itmsimport нужен приватный ключ в правильной папке
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_IDENTIFIER.p8
+
+      - name: Upload to TestFlight
+        run: |
+          # Загружаем собранный .ipa в App Store Connect
+          xcrun altool --upload-app --type ios \
+            -f build/ios/ipa/*.ipa \
+            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
