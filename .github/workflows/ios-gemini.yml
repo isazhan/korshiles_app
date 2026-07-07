@@ -58,6 +58,12 @@ jobs:
       - run: |
           flutter clean
           flutter pub get
+      
+      - name: Force Manual Signing in pbxproj
+        run: |
+          # Меняем стиль подписи с Automatic на Manual прямо в файле проекта Xcode
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
 
       - name: Build IPA
         run: |
@@ -91,7 +97,16 @@ jobs:
           </plist>
           EOF
 
-          flutter build ipa --release --export-method=app-store --build-number=$buildNumber --build-name=$buildName
+          # 2. Собираем IPA, принудительно передавая Team ID и имя профиля в Xcode аргументы
+          flutter build ipa --release \
+            --export-options-plist=exportOptions.plist \
+            --build-name=$buildName \
+            --build-number=$buildNumber \
+            --inputs-from-secure-properties=false \
+            --codesign \
+            --xcconfig="DEVELOPMENT_TEAM=T848W2JRH4" \
+            --xcconfig="PROVISIONING_PROFILE_SPECIFIER=Korshiles_TestFlight_Profile" \
+            --xcconfig="CODE_SIGN_STYLE=Manual"
 
       - name: Upload private key for App Store Connect API
         run: |
