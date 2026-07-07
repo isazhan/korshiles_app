@@ -56,6 +56,37 @@ jobs:
       - name: Set up Code signing settings on Xcode project
         run: xcode-project use-profiles
 
+      - name: Force iOS Deployment Target in Flutter Configs
+        run: |
+          # 1. Прописываем таргет в автогенерируемые конфигурационные файлы Flutter
+          mkdir -p ios/Flutter
+          touch ios/Flutter/Generated.xcconfig
+          touch ios/Flutter/flutter_export_environment.sh
+          
+          echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Generated.xcconfig
+          echo "export \"IPHONEOS_DEPLOYMENT_TARGET=15.0\"" >> ios/Flutter/flutter_export_environment.sh
+
+          # Если файл Flutter.xcconfig уже существует, добавим и туда
+          if [ -f ios/Flutter/Flutter.xcconfig ]; then
+            echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> ios/Flutter/Flutter.xcconfig
+          fi
+
+      - name: Force iOS Deployment Target in Podfile
+        run: |
+          # 2. Модифицируем Podfile, чтобы все зависимости (поды) тоже собирались под iOS 15.0
+          # Это предотвратит конфликты версий у плагинов
+          cat << 'EOF' >> ios/Podfile
+
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              flutter_additional_ios_build_settings(target)
+              target.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+              end
+            end
+          end
+          EOF
+
       - name: Build IPA for Distribution
         run: |
           versionLine=$(grep '^version:' pubspec.yaml | awk '{print $2}')
@@ -70,8 +101,7 @@ jobs:
           flutter build ipa --release \
             --build-number=$buildNumber \
             --build-name=$buildName \
-            --export-options-plist=$HOME/export_options.plist \
-            --xcconfig="IPHONEOS_DEPLOYMENT_TARGET=15.0"
+            --export-options-plist=$HOME/export_options.plist
 
       - name: Save App Store Connect API Key
         run: |
