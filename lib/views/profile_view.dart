@@ -204,7 +204,7 @@ class _ProfileViewState extends State<ProfileView> {
                 children: [
                   // Version
                   Text(
-                    lang == 'kk' ? 'Қосымша нұсқасы: 1.0.12' : 'Версия приложения: 1.0.12',
+                    lang == 'kk' ? 'Қосымша нұсқасы: 1.0.13' : 'Версия приложения: 1.0.13',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
