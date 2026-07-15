@@ -10,6 +10,7 @@ import 'globals.dart' as globals;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   
   if (!kIsWeb) unawaited(MobileAds.instance.initialize());  
   
