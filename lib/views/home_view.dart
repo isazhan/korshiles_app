@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:korshiles_app/requests/api.dart';
 import '../widgets/bar.dart';
 import 'filter_view.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'dart:io';
 import '../widgets/ad_card.dart';
 import '../globals.dart' as globals;
+import '../admob/native1.dart';
+import '../admob/native2.dart';
+import '../admob/native3.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import '../admob/app_tracking.dart';
+
 
 class HomeView extends StatefulWidget {
-  final AdSize adSize;
-  final String adUnitId = Platform.isAndroid
-    // for Andriod
-    ? 'ca-app-pub-5754778099148012/4385493179'
-    // for iOS
-    : 'ca-app-pub-5754778099148012/1363290074';
-
-  HomeView({super.key, this.adSize = AdSize.largeBanner});
+  HomeView({super.key});
 
   @override
   _HomeViewState createState() => _HomeViewState();
@@ -23,7 +20,6 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   List<dynamic> _data = [];
-  List<BannerAd> _bannerAd = [];
   String selectedType = '';
   String selectedCity = '';
   String selectedDistrict = '';
@@ -38,7 +34,16 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _refreshData({'page': '1', 'type': '', 'city': '', 'district': ''});
-    _loadAd();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initTracking());
+  }
+
+  Future<void> _initTracking() async {
+    final status = await AppTrackingService.requestTrackingPermission();
+
+    if (status == TrackingStatus.authorized) {
+      final idfa = await AppTrackingService.getAdvertisingIdentifier();
+    } else {
+    }
   }
 
   void _onScroll() {
@@ -74,9 +79,6 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   void dispose() {
-    for (var ad in _bannerAd) {
-      ad.dispose();
-    }
     _scrollController.dispose();
     super.dispose();
   }
@@ -94,33 +96,6 @@ class _HomeViewState extends State<HomeView> {
       });
     } catch (e) {
       print('Error fetching ads: $e');
-    }
-  }
-
-  void previousPage() {
-    _refreshData({'page': (int.parse(selectedPage)-1).toString(), 'type': '', 'city': '', 'district': ''});
-  }
-
-  void nextPage() {
-    _refreshData({'page': (int.parse(selectedPage)+1).toString(), 'type': '', 'city': '', 'district': ''});
-  }
-
-  void _loadAd() {
-    // For example, load 5 banner ads
-    for (int i = 0; i < 5; i++) {
-      final ad = BannerAd(
-        adUnitId: widget.adUnitId,
-        size: widget.adSize,
-        request: const AdRequest(),
-        listener: BannerAdListener(
-          onAdLoaded: (ad) => setState(() {}),
-          onAdFailedToLoad: (ad, error) {
-            debugPrint('Ad failed to load: $error');
-            ad.dispose();
-          },
-        ),
-      )..load();
-      _bannerAd.add(ad);
     }
   }
 
@@ -208,45 +183,10 @@ class _HomeViewState extends State<HomeView> {
             return Center(
               child: CircularProgressIndicator(),
             );
-          }
-
-          // Ads + Admob
-          if (index == 2 || (index > 2 && (index - 2) % 4 == 0)) {
-            final adIndex = ((index - 2) ~/ 4) % _bannerAd.length;
-            final ad = _bannerAd[adIndex];
-
-            return Column(
-              children: [
-                // Admob
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 10),
-                  width: widget.adSize.width.toDouble(),
-                  height: widget.adSize.height.toDouble(),
-                  child: AdWidget(ad: ad),
-                  //child: const SizedBox(),
-                ),
-
-                // Ad
-                AdCard(
-                  title: _data[index]['type'][lang],
-                  ad: _data[index]['ad'].toString(),
-                  photos: (_data[index]['photos'] != null)
-                      ? globals.host + _data[index]['photos'][0]
-                      : 'no',
-                  city: _data[index]['city'][lang],
-                  district: (_data[index]['district'] != '')
-                      ? _data[index]['district'][lang]
-                      : '',
-                  description: _data[index]['info'],
-                  views: _data[index]['views'].toString(),
-                  date: _data[index]['create_time'].toString(),
-                )
-              ],
-            );
-          }
+          }          
 
           // Common ad
-          return AdCard(
+          final adCard = AdCard(
             title: _data[index]['type'][lang],
             ad: _data[index]['ad'].toString(),
             photos: (_data[index]['photos'] != null)
@@ -260,10 +200,38 @@ class _HomeViewState extends State<HomeView> {
             views: _data[index]['views'].toString(),
             date: _data[index]['create_time'].toString(),
           );
+
+          if (index == 2) {
+            return Column(
+              children: [
+                NativeAdWidget1(),
+                adCard,
+              ],
+            );
+          }
+
+          if (index == 6) {
+            return Column(
+              children: [
+                NativeAdWidget2(),
+                adCard,
+              ],
+            );
+          }
+
+          if (index == 10) {
+            return Column(
+              children: [
+                NativeAdWidget3(),
+                adCard,
+              ],
+            );
+          }
+
+          return adCard;
         }
       ))
-        ),
-
+      ),
       ]),
     );
   }

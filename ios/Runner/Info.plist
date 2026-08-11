@@ -43,6 +43,8 @@
 	<string>Korshiles</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-5754778099148012~5682429215</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Нам необходимо разрешение на отслеживание, чтобы показывать вам более релевантную рекламу.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
